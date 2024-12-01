@@ -1,12 +1,28 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import HomePage from './pages/HomePage/HomePage';
 import Auth from './pages/Auth/Auth';
+import GoogleLoginSuccess from './pages/GoogleLoginSuccess/GoogleLoginSuccess';
+import PrivateRoute from './components/PrivateRoute';
+
+
 function App() {
   return (
-    <div className="App">
-      <Auth/>
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Wrap HomePage route with PrivateRoute to protect it */}
+          <Route path="/" element={
+            <PrivateRoute>
+              <HomePage />
+            </PrivateRoute>
+          } />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
