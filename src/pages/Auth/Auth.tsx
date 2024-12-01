@@ -1,23 +1,117 @@
+import axios from "axios";
 import React, { useState } from "react";
+import Swal from "sweetalert2";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Auth: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const handleSignUp = () => alert("Sign Up Successfully!");
-  const handleSignIn = () => alert("Sign In Successfully!");
-  const toggleForm = () => {
-    setIsSignUp(isSignUp);
-    setFormData({ email: "", password: "", confirmPassword: "" });
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignUp = async () => {
+    try {
+      const response = await axios.post("http://localhost:4000/user/register", {
+        username: formData.username, 
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      if (response.status === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Sign Up Successful!",
+          text: "You can now log in.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setIsSignUp(false);
+      }
+    } catch (error: any) {
+      let errorMessage = "An unknown error occurred.";
+
+      if (error.response) {
+        console.error("Sign up error:", error.response.data);
+        const errorData = error.response.data;
+        errorMessage = errorData.message || errorMessage;
+      } else {
+        console.error("Sign up error:", error.message);
+        errorMessage = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Sign Up Failed",
+        text: errorMessage,
+      });
+    }
   };
+
+  const handleSignIn = async () => {
+    try {
+      const response = await axios.post("http://localhost:4000/user/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.status === 200) {
+        const { user_id, user_name, access_token } = response.data;
+        login(user_id, user_name, access_token);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful!',
+          text: 'Welcome back!',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        navigate("/");
+      }
+
+    } catch (error: any) {
+      let errorMessage = "An unknown error occurred.";
+
+      if (error.response) {
+        console.error("Login error:", error.response.data);
+        const errorData = error.response.data;
+        errorMessage = errorData.message || errorMessage;
+      } else {
+        console.error("Login error:", error.message);
+        errorMessage = error.message;
+      }
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: errorMessage,
+      });
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    // Redirect the user to the Google OAuth endpoint
+    window.location.href = "http://localhost:4000/user/auth/google";
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
   const toggleAuthMode = () => setIsSignUp(!isSignUp);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -45,22 +139,26 @@ const Auth: React.FC = () => {
       console.log("Sign Up data:", formData);
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
-      <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
-        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
-          <div className="mt-12 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-bold text-center mb-6">
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 flex justify-center items-center">
+      <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg flex flex-col lg:flex-row">
+        {/* Form Section */}
+        <div className="lg:w-1/2 p-8 sm:p-12">
+          <div className="flex flex-col items-center">
+            <h1 className="text-3xl font-extrabold text-gray-800 mb-6">
               {isSignUp ? "Sign Up" : "Sign In"}
             </h1>
-            <form onSubmit={handleSubmit} className="mx-auto max-w-xs">
+            <form onSubmit={handleSubmit} className="w-full max-w-sm">
               {isSignUp && (
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  placeholder="Full Name"
-                  className="mt-5 w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                  id="username"
+                  name="username"
+                  placeholder="User Name"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="w-full px-5 py-3 rounded-lg shadow-sm bg-gray-100 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
                   required
                 />
               )}
@@ -71,79 +169,90 @@ const Auth: React.FC = () => {
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-5 w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                className="w-full px-5 py-3 rounded-lg shadow-sm bg-gray-100 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
                 required
               />
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-5 w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                required
-              />
-              {isSignUp && (
+              <div className="relative">
                 <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  value={formData.confirmPassword}
+                  type={passwordVisible ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
                   onChange={handleChange}
-                  className="mt-5 w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                  className="w-full px-5 py-3 rounded-lg shadow-sm bg-gray-100 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  className="absolute right-3 top-1/3 transform -translate-y-1/2 text-xl"
+                >
+                  {passwordVisible ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {isSignUp && (
+                <div className="relative">
+                  <input
+                    type={confirmPasswordVisible ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3 rounded-lg shadow-sm bg-gray-100 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                    className="absolute right-3 top-1/3 transform -translate-y-1/2 text-xl"
+                  >
+                    {confirmPasswordVisible ? "🙈" : "👁️"}
+                  </button>
+                </div>
               )}
               <button
                 type="submit"
-                className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-3 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
+                className="w-full py-3 text-white font-semibold rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-500 transition-all duration-300 shadow-md"
               >
-                <span className="ml-3">{isSignUp ? "Sign Up" : "Sign In"}</span>
+                {isSignUp ? "Sign Up" : "Sign In"}
               </button>
-
-              <button
-                type="button"
-                className="mt-5 tracking-wide font-semibold bg-red-500 text-gray-100 w-full py-3 rounded-lg transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none hover:bg-red-600"
-              >
-                <div className="bg-white p-2 rounded-full">
-                  <svg className="w-4" viewBox="0 0 533.5 544.3">
-                    <path
-                      d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z"
-                      fill="#4285f4"
-                    />
-                    <path
-                      d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z"
-                      fill="#34a853"
-                    />
-                    <path
-                      d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z"
-                      fill="#fbbc04"
-                    />
-                    <path
-                      d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z"
-                      fill="#ea4335"
-                    />
-                  </svg>
-                </div>
-                <span className="ml-4">Login with Google</span>
-              </button>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center py-3 mt-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
+                    alt="Google Logo"
+                    className="w-5 h-5 mr-3"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Continue with Google</span>
+                </button>
+              )}
             </form>
-            <p className="text-center mt-4">
+            <p className="text-gray-600 mt-6">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
               <button
                 type="button"
                 onClick={toggleAuthMode}
-                className="text-blue-500 hover:underline"
+                className="text-indigo-600 font-medium hover:underline"
               >
                 {isSignUp ? "Sign In" : "Sign Up"}
               </button>
             </p>
           </div>
         </div>
-        <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
-          <div className="m-12 xl:m-16 w-full bg-[url('https://storage.googleapis.com/devitary-image-host.appspot.com/15848031292911696601-undraw_designer_life_w96d.svg')] bg-contain bg-center bg-no-repeat"></div>
+
+        {/* Illustration Section */}
+        <div className="lg:flex-1 bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-500 hidden lg:flex items-center justify-center">
+          <img
+            src="https://storage.googleapis.com/devitary-image-host.appspot.com/15848031292911696601-undraw_designer_life_w96d.svg"
+            alt="Illustration"
+            className="w-3/4 max-w-sm"
+          />
         </div>
       </div>
     </div>
