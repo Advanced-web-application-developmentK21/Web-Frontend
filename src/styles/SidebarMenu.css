@@ -1,0 +1,68 @@
+/* SidebarMenuGroup.css */
+.menu-group-title {
+  padding-top: 1.2rem; /* py-4 */
+  padding-bottom: 0.5rem; /* py-4 */
+  letter-spacing: 0.1rem; /* tracking-[.1rem] */
+  font-weight: 500; /* font-medium */
+  text-transform: uppercase; /* uppercase */
+  font-size: 0.75rem; /* text-xs */
+  color: #383c43; /* text-gray-500 */
+  transition: all 0.3s; /* transition duration-300 */
+}
+
+.menu-group-title-centered {
+  text-align: center; /* text-center */
+}
+
+/* SidebarMenuItem.css */
+.inactive-link {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  height: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  transition: all 0.2s ease-in-out;
+  color: #000000;
+}
+
+.inactive-link:hover {
+  color: #ffffff;
+  background-color: #48D1CC;
+  transform: scale(1.05);
+}
+
+.active-link {
+  background-color: #008B8B ;
+  color: #ffffff;
+}
+
+.menu-container {
+  min-width: 18px;
+}
+
+.icon-container {
+  min-width: 20px;
+}
+
+.menu-title {
+  margin-left: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.rotate-icon {
+  transform: rotate(90deg);
+}
+
+.icon-spacing {
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+
+.inactive-text {
+  font-size: 16.2px;
+  margin-left: 0.75rem;
+}
+
