@@ -7,6 +7,7 @@ import GoogleLoginSuccess from './pages/GoogleLoginSuccess/GoogleLoginSuccess';
 import PrivateRoute from './components/PrivateRoute';
 import UserLayout from './layout/UserLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
+import FocusTimer from './pages/Dashboard/FocusTimer';
 
 
 function App() {
@@ -48,7 +49,7 @@ function App() {
         } />
         <Route path="/timer" element={
           <UserLayout>
-            <Dashboard />
+            <FocusTimer />
           </UserLayout>
         } />
         <Route path="/analytics" element={
