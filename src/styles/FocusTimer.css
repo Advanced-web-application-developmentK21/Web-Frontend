@@ -49,6 +49,18 @@
   }
   
   /* Button styles */
+
+  .focus-timer-container .star-button {
+    background-color: #45a049;
+  }
+  .focus-timer-container .stop-button {
+    background-color: #ff0000;
+  }
+
+  .focus-timer-container .reset-button {
+    background-color: #2196f3;
+  }
+  
   .focus-timer-container button {
     padding: 10px 20px;
     font-size: 1rem;
@@ -61,6 +73,8 @@
     width: 100%;
     max-width: 150px;
   }
+
+ 
   
   .focus-timer-container button:hover {
     background-color: #45a049;

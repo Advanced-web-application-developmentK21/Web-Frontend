@@ -103,13 +103,13 @@ function FocusTimer() {
           onChange={(e) => setBreakDuration(Number(e.target.value))}
           min="1"
         />
-        <button onClick={startTimer} disabled={isRunning}>
+        <button className="start-button" onClick={startTimer} disabled={isRunning}>
           Start
         </button>
-        <button onClick={stopTimer} disabled={!isRunning}>
+        <button className="stop-button" onClick={stopTimer} disabled={!isRunning}>
           Stop
         </button>
-        <button onClick={resetTimer}>Reset</button>
+        <button className="reset-button" onClick={resetTimer}>Reset</button>
       </div>
       <h2>{task || newTask || "No task selected"}</h2>
       <h3>
