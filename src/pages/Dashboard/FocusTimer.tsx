@@ -1,33 +1,61 @@
 import React, { useState, useEffect } from "react";
+import "../../styles/FocusTimer.css";
 
 function FocusTimer() {
+  const [taskList, setTaskList] = useState<string[]>([
+    "Write report",
+    "Study React",
+    "Prepare presentation",
+    "Exercise",
+  ]); // Placeholder tasks
   const [task, setTask] = useState<string>("");
-  const [duration, setDuration] = useState<number>(25); // default duration in minutes
-  const [timeLeft, setTimeLeft] = useState<number>(0); // countdown in seconds
+  const [newTask, setNewTask] = useState<string>(""); // For custom task input
+  const [duration, setDuration] = useState<number>(25); // Work duration in minutes
+  const [breakDuration, setBreakDuration] = useState<number>(5); // Break duration in minutes
+  const [timeLeft, setTimeLeft] = useState<number>(0); // Countdown in seconds
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isBreak, setIsBreak] = useState<boolean>(false); // Toggle work/break
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>; // Explicitly type the timer
+    let timer: ReturnType<typeof setInterval>;
 
     if (isRunning && timeLeft > 0) {
-        timer = setInterval(() => {
-            setTimeLeft((prev) => prev - 1);
-        }, 1000);
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
     } else if (timeLeft === 0 && isRunning) {
-        setIsRunning(false);
-        alert("Session completed!");
+      setIsRunning(false); // Pause timer temporarily
+      const nextPhase = isBreak ? "work session" : "break";
+      alert(`Session completed! Starting ${nextPhase}.`);
+      if (!isBreak) {
+        // Switch to break session
+        setTimeLeft(breakDuration * 60);
+        setIsBreak(true);
+        setIsRunning(true); // Restart timer
+      } else {
+        // Switch to work session
+        setTimeLeft(duration * 60);
+        setIsBreak(false);
+        setIsRunning(true); // Restart timer
+      }
     }
 
-    return () => clearInterval(timer); // Clean up the interval
-  }, [isRunning, timeLeft]);
+    return () => clearInterval(timer);
+  }, [isRunning, timeLeft, isBreak, duration, breakDuration]);
 
   const startTimer = () => {
-    if (task.trim() === "") {
-      alert("Please enter a task name!");
+    const finalTask = newTask.trim() || task; // Use newTask if provided, else selected task
+    if (!finalTask) {
+      alert("Please select or enter a task!");
       return;
     }
-    setTimeLeft(duration * 60); // convert minutes to seconds
+    if (newTask.trim() && !taskList.includes(newTask.trim())) {
+      setTaskList((prev) => [...prev, newTask.trim()]); // Add new task to the list
+    }
+    setTask(finalTask);
+    setTimeLeft(duration * 60); // Convert minutes to seconds
     setIsRunning(true);
+    setIsBreak(false);
   };
 
   const stopTimer = () => {
@@ -37,27 +65,43 @@ function FocusTimer() {
   const resetTimer = () => {
     setIsRunning(false);
     setTimeLeft(0);
+    setIsBreak(false);
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>FOCUS TIMER</h1>
-      <p>Welcome to the React FocusTimer.</p>
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Enter task name"
+    <div className="focus-timer-container">
+      <h1>FOCUS TIMER WITH POMODORO</h1>
+      <div className="task-controls">
+        <select
           value={task}
           onChange={(e) => setTask(e.target.value)}
-          style={{ marginRight: "10px" }}
+        >
+          <option value="">Select an Existing Task</option>
+          {taskList.map((t, index) => (
+            <option key={index} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Or enter a new task"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
         />
         <input
           type="number"
-          placeholder="Duration (minutes)"
+          placeholder="Work Duration (minutes)"
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
           min="1"
-          style={{ marginRight: "10px" }}
+        />
+        <input
+          type="number"
+          placeholder="Break Duration (minutes)"
+          value={breakDuration}
+          onChange={(e) => setBreakDuration(Number(e.target.value))}
+          min="1"
         />
         <button onClick={startTimer} disabled={isRunning}>
           Start
@@ -67,25 +111,19 @@ function FocusTimer() {
         </button>
         <button onClick={resetTimer}>Reset</button>
       </div>
-      <h2>{task || "No task selected"}</h2>
+      <h2>{task || newTask || "No task selected"}</h2>
       <h3>
+        {isBreak ? "Break Time" : "Work Time"} -{" "}
         {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
       </h3>
       {isRunning && (
-        <div
-          style={{
-            width: "300px",
-            height: "10px",
-            background: "#ddd",
-            margin: "20px auto",
-            position: "relative",
-          }}
-        >
+        <div className="timer-bar">
           <div
+            className="timer-progress"
             style={{
-              width: `${((duration * 60 - timeLeft) / (duration * 60)) * 100}%`,
-              height: "10px",
-              background: "green",
+              width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
+                ((isBreak ? breakDuration : duration) * 60) *
+                100}%`,
             }}
           />
         </div>
