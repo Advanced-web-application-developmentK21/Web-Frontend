@@ -8,7 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import UserLayout from './layout/UserLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Schedule from './pages/Schedule/SchedulePage';
-import FocusTimer from './pages/Dashboard/FocusTimer';
+import FocusTimer from './pages/FocusTime/FocusTimerPage';
 
 
 function App() {
@@ -48,7 +48,7 @@ function App() {
             <Schedule />
           </UserLayout>
         } />
-        {/* <Route path="/timer" element={
+        <Route path="/timer" element={
           <UserLayout>
             <FocusTimer />
           </UserLayout>
@@ -67,7 +67,7 @@ function App() {
           <UserLayout>
             <Dashboard />
           </UserLayout>
-        } /> */}
+        } />
 
         <Route path="/auth" element={<Auth />} />
         <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
