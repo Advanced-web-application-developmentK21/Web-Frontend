@@ -58,6 +58,14 @@ function FocusTimer() {
     setIsBreak(false);
   };
 
+  const saveTask = () => {
+    const trimmedTask = newTask.trim();
+    if (trimmedTask && !taskList.includes(trimmedTask)) {
+      setTaskList((prev) => [...prev, trimmedTask]); // Add new task to the list
+      setNewTask(""); // Clear the input field after saving
+    }
+  };
+
   const stopTimer = () => {
     setIsRunning(false);
   };
@@ -83,12 +91,21 @@ function FocusTimer() {
             </option>
           ))}
         </select>
-        <input
-          type="text"
-          placeholder="Or enter a new task"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-        />
+        <div>
+          <input
+            type="text"
+            placeholder="Or enter a new task"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+          />
+          <button
+            className="save-button"
+            onClick={saveTask}
+            disabled={!newTask.trim()} // Disable button if input is empty
+          >
+            Save
+          </button>
+        </div>
         <input
           type="number"
           placeholder="Work Duration (minutes)"
