@@ -1,4 +1,4 @@
-import { BsCalendar, BsClipboard, BsClock, BsGraphUp, BsGear, BsHouseDoor, BsKanban, BsQuestionCircle } from "react-icons/bs";
+import { BsCalendar, BsClipboard, BsClock, BsGraphUp, BsGear, BsHouseDoor, BsQuestionCircle } from "react-icons/bs";
 import { SideNavItemGroup } from "./types/type";
 
 export const SIDENAV_ITEMS: SideNavItemGroup[] = [
@@ -7,7 +7,7 @@ export const SIDENAV_ITEMS: SideNavItemGroup[] = [
         menuList: [
             {
                 title: 'Home',
-                path: '/',
+                path: '/home',
                 icon: <BsHouseDoor size={20} />,
             }
         ]
