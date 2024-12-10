@@ -91,7 +91,7 @@ function FocusTimer() {
             </option>
           ))}
         </select>
-        <div>
+        <div className="row">
           <input
             type="text"
             placeholder="Or enter a new task"
@@ -106,26 +106,38 @@ function FocusTimer() {
             Save
           </button>
         </div>
-        <input
-          type="number"
-          placeholder="Work Duration (minutes)"
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
-          min="1"
-        />
-        <input
-          type="number"
-          placeholder="Break Duration (minutes)"
-          value={breakDuration}
-          onChange={(e) => setBreakDuration(Number(e.target.value))}
-          min="1"
-        />
-        <button className="start-button" onClick={startTimer} disabled={isRunning}>
-          Start
-        </button>
-        <button className="stop-button" onClick={stopTimer} disabled={!isRunning}>
-          Stop
-        </button>
+        <div className="row">
+          <label>
+          Work Duration (minutes)
+          </label>
+          <input
+            type="number"
+            placeholder="Work Duration (minutes)"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            min="1"
+          />
+        </div>
+        <div className="row">
+          <label>
+          Break Duration (minutes)
+          </label>
+          <input
+            type="number"
+            placeholder="Break Duration (minutes)"
+            value={breakDuration}
+            onChange={(e) => setBreakDuration(Number(e.target.value))}
+            min="1"
+          />
+        </div>
+        <div className="row" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <button className="start-button" onClick={startTimer} disabled={isRunning}>
+            Start
+          </button>
+          <button className="stop-button" onClick={stopTimer} disabled={!isRunning}>
+            Stop
+          </button>
+        </div>
         <button className="reset-button" onClick={resetTimer}>Reset</button>
       </div>
       <h2>{task || newTask || "No task selected"}</h2>

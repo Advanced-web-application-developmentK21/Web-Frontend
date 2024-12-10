@@ -33,7 +33,8 @@
   .focus-timer-container input[type="text"],
   .focus-timer-container input[type="number"] {
     width: 100%;
-    max-width: 300px;
+    height: 60px;
+    max-width: 500px;
     padding: 10px;
     font-size: 1rem;
     border-radius: 5px;
@@ -47,6 +48,13 @@
     border-color: #4caf50;
     outline: none;
   }
+
+  .focus-timer-container .row {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    gap: 10px;
+  }
   
   /* Button styles */
   .focus-timer-container .save-button {
@@ -55,6 +63,10 @@
     border: #000000;
     border-style: solid;
     border-width: 2px;
+    width: 90px;
+    height: 60px;
+    max-width: 300px;
+    padding: 10px;
   }
   .focus-timer-container .save-button:hover {
     color: #48ff00;
