@@ -1,13 +1,16 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import HomePage from "./pages/HomePage/HomePage";
-import Auth from "./pages/Auth/Auth";
-import GoogleLoginSuccess from "./pages/GoogleLoginSuccess/GoogleLoginSuccess";
-import PrivateRoute from "./components/PrivateRoute";
-import UserLayout from "./layout/UserLayout";
-import Dashboard from "./pages/Dashboard/Dashboard";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import HomePage from './pages/HomePage/HomePage';
+import Auth from './pages/Auth/Auth';
+import GoogleLoginSuccess from './pages/GoogleLoginSuccess/GoogleLoginSuccess';
+import PrivateRoute from './components/PrivateRoute';
+import UserLayout from './layout/UserLayout';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Schedule from './pages/Schedule/SchedulePage';
+import FocusTimer from './pages/FocusTime/FocusTimerPage';
 import TaskManagement from "./pages/TaskManagement/TaskManagement";
+
 
 function App() {
   return (
@@ -30,64 +33,42 @@ function App() {
 
     <Router>
       <Routes>
-        {/* Wrap HomePage route with PrivateRoute to protect it */}
-        <Route
-          path="/"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/tasks"
-          element={
-            <UserLayout>
-              <TaskManagement />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/schedule"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/timer"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-        <Route
-          path="/help"
-          element={
-            <UserLayout>
-              <Dashboard />
-            </UserLayout>
-          }
-        />
-
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={
+          <UserLayout>
+            <Dashboard />
+          </UserLayout>
+        } />
+        {/* <Route path="/tasks" element={
+          <UserLayout>
+            <TaskManagement />
+          </UserLayout>
+        } /> */}
+        <Route path="/schedule" element={
+          <UserLayout>
+            <Schedule />
+          </UserLayout>
+        } />
+        <Route path="/timer" element={
+          <UserLayout>
+            <FocusTimer />
+          </UserLayout>
+        } />
+        <Route path="/analytics" element={
+          <UserLayout>
+            <Dashboard />
+          </UserLayout>
+        } />
+        <Route path="/profile" element={
+          <UserLayout>
+            <Dashboard />
+          </UserLayout>
+        } />
+        <Route path="/help" element={
+          <UserLayout>
+            <Dashboard />
+          </UserLayout>
+        } />
         <Route path="/auth" element={<Auth />} />
         <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
       </Routes>
