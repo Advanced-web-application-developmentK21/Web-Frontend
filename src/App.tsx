@@ -39,11 +39,11 @@ function App() {
             <Dashboard />
           </UserLayout>
         } />
-        {/* <Route path="/tasks" element={
+        <Route path="/tasks" element={
           <UserLayout>
             <TaskManagement />
           </UserLayout>
-        } /> */}
+        } />
         <Route path="/schedule" element={
           <UserLayout>
             <Schedule />
