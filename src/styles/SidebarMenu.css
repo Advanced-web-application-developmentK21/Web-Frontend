@@ -28,12 +28,12 @@
 
 .inactive-link:hover {
   color: #ffffff;
-  background-color: #48D1CC;
+  background-color: #48d1cc;
   transform: scale(1.05);
 }
 
 .active-link {
-  background-color: #008B8B ;
+  background-color: #008b8b;
   color: #ffffff;
 }
 
@@ -65,4 +65,3 @@
   font-size: 16.2px;
   margin-left: 0.75rem;
 }
-
