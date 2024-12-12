@@ -9,6 +9,7 @@ import UserLayout from './layout/UserLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Schedule from './pages/Schedule/SchedulePage';
 import FocusTimer from './pages/FocusTime/FocusTimerPage';
+import TaskManagement from "./pages/TaskManagement/TaskManagement";
 
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
         } />
         {/* <Route path="/tasks" element={
           <UserLayout>
-            <Dashboard />
+            <TaskManagement />
           </UserLayout>
         } /> */}
         <Route path="/schedule" element={
@@ -68,7 +69,6 @@ function App() {
             <Dashboard />
           </UserLayout>
         } />
-
         <Route path="/auth" element={<Auth />} />
         <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
       </Routes>
