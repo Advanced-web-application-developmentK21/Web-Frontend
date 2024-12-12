@@ -14,9 +14,11 @@ export interface Task {
   id: string;
   title: string;
   description: string;
+  startDate: Date | null; // ISO string for simplicity
   dueDate: Date | null; // ISO string for simplicity
   priority: "low" | "medium" | "high";
-  status: "overdue" | "inprogress" | "completed";
+  status: "todo" | "expired" | "inprogress" | "completed";
+  estimateTime: number
 }
 
 export interface TaskCategory {

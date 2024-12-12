@@ -28,9 +28,11 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     setEditedTask({ ...editedTask, [name]: value });
     setErrors({ ...errors, [name]: "" }); // Clear errors on input
   };
-  const handleDateChange = (date: Date | null) => {
-    setEditedTask({ ...editedTask, dueDate: date });
+
+  const handleDateChange = (date: Date | null, field: string) => {
+    setEditedTask({ ...editedTask, [field]: date });
   };
+
   const validateFields = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!editedTask.title.trim()) {
@@ -83,9 +85,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               name="title"
               value={editedTask.title}
               onChange={handleInputChange}
-              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${
-                errors.title ? "border-red-500" : ""
-              }`}
+              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${errors.title ? "border-red-500" : ""
+                }`}
             />
             {errors.title && (
               <p className="text-red-500 text-md mt-1">{errors.title}</p>
@@ -105,147 +106,174 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             />
           </div>
 
-          {/* Priority */}
-          <div>
-            <label className="mb-1 block text-md font-medium text-gray-700">
-              Priority
-            </label>
-            <select
-              name="priority"
-              value={editedTask.priority}
-              onChange={handleInputChange}
-              className="select select-bordered w-full input input-bordered border-2 rounded-md border-slate-200 "
-            >
-              <option value="">Select priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-            {errors.priority && (
-              <p className="text-red-500 text-md mt-1">{errors.priority}</p>
-            )}
+          {/* Priority and Status */}
+          <div className="flex space-x-4">
+            {/* Priority */}
+            <div className="w-full">
+              <label className="mb-1 block text-md font-medium text-gray-700">
+                Priority
+              </label>
+              <select
+                name="priority"
+                value={editedTask.priority}
+                onChange={handleInputChange}
+                className="select select-bordered w-full input input-bordered border-2 rounded-md border-slate-200"
+              >
+                <option value="">Select priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+              {errors.priority && (
+                <p className="text-red-500 text-md mt-1">{errors.priority}</p>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="w-full">
+              <label className="mb-1 block text-md font-medium text-gray-700">
+                Status
+              </label>
+              <select
+                name="status"
+                value={editedTask.status}
+                onChange={handleInputChange}
+                className="select select-bordered w-full input input-bordered border-2 rounded-md border-slate-200"
+              >
+                <option value="inprogress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <label className="mb-1 block text-md font-medium text-gray-700">
-              Status
-            </label>
-            <select
-              name="status"
-              value={editedTask.status}
-              onChange={handleInputChange}
-              className="select select-bordered w-full input input-bordered border-2 rounded-md border-slate-200 "
-            >
-              <option value="inprogress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-
-          {/* Estimated Time */}
-          <div>
-            <label className="mb-1 block text-md font-medium text-gray-700">
-              Due Date
-            </label>
-            <DatePicker
-              showIcon
-              selected={editedTask.dueDate}
-              onChange={handleDateChange}
-              className="flex border-2 rounded-md cursor-pointer"
-              icon={
-                <svg
-                  className="mt-0.5"
-                  height="24"
-                  version="1.1"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g transform="translate(0 -1028.4)">
-                    <path
-                      d="m5 1032.4c-1.1046 0-2 0.9-2 2v14c0 1.1 0.8954 2 2 2h6 2 6c1.105 0 2-0.9 2-2v-14c0-1.1-0.895-2-2-2h-6-2-6z"
-                      fill="#bdc3c7"
-                    />
-                    <path
-                      d="m5 3c-1.1046 0-2 0.8954-2 2v14c0 1.105 0.8954 2 2 2h6 2 6c1.105 0 2-0.895 2-2v-14c0-1.1046-0.895-2-2-2h-6-2-6z"
-                      fill="#ecf0f1"
-                      transform="translate(0 1028.4)"
-                    />
-                    <path
-                      d="m5 3c-1.1046 0-2 0.8954-2 2v3 1h18v-1-3c0-1.1046-0.895-2-2-2h-6-2-6z"
-                      fill="#e74c3c"
-                      transform="translate(0 1028.4)"
-                    />
-                    <path
-                      d="m7 5.5a1.5 1.5 0 1 1 -3 0 1.5 1.5 0 1 1 3 0z"
-                      fill="#c0392b"
-                      transform="translate(.5 1028.4)"
-                    />
-                    <path
-                      d="m6 1c-0.5523 0-1 0.4477-1 1v3c0 0.5523 0.4477 1 1 1s1-0.4477 1-1v-3c0-0.5523-0.4477-1-1-1z"
-                      fill="#bdc3c7"
-                      transform="translate(0 1028.4)"
-                    />
-                    <path
-                      d="m7 5.5a1.5 1.5 0 1 1 -3 0 1.5 1.5 0 1 1 3 0z"
-                      fill="#c0392b"
-                      transform="translate(12.5 1028.4)"
-                    />
-                    <g fill="#bdc3c7">
-                      <path d="m18 1029.4c-0.552 0-1 0.4-1 1v3c0 0.5 0.448 1 1 1s1-0.5 1-1v-3c0-0.6-0.448-1-1-1z" />
-                      <path d="m5 1039.4v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2z" />
-                      <path d="m5 1042.4v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2z" />
-                      <path d="m5 1045.4v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2zm3 0v2h2v-2h-2z" />
+          <div className="flex space-x-4">
+            <div className="w-full">
+              <label className="mb-1 block text-md font-medium text-gray-700">
+                Start Date
+              </label>
+              <DatePicker
+                showIcon
+                selected={editedTask.startDate}
+                onChange={(date) => handleDateChange(date, "startDate")}
+                className="flex border-2 rounded-md cursor-pointer w-full p-2"
+                icon={
+                  <svg
+                    className="mt-0.5"
+                    height="24"
+                    version="1.1"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g transform="translate(0 -1028.4)">
+                      <path
+                        d="m5 1032.4c-1.1046 0-2 0.9-2 2v14c0 1.1 0.8954 2 2 2h6 2 6c1.105 0 2-0.9 2-2v-14c0-1.1-0.895-2-2-2h-6-2-6z"
+                        fill="#bdc3c7"
+                      />
+                      <path
+                        d="m5 3c-1.1046 0-2 0.8954-2 2v14c0 1.105 0.8954 2 2 2h6 2 6c1.105 0 2-0.895 2-2v-14c0-1.1046-0.895-2-2-2h-6-2-6z"
+                        fill="#ecf0f1"
+                        transform="translate(0 1028.4)"
+                      />
+                      <path
+                        d="m5 3c-1.1046 0-2 0.8954-2 2v3 1h18v-1-3c0-1.1046-0.895-2-2-2h-6-2-6z"
+                        fill="#e74c3c"
+                        transform="translate(0 1028.4)"
+                      />
+                      <path
+                        d="m7 5.5a1.5 1.5 0 1 1 -3 0 1.5 1.5 0 1 1 3 0z"
+                        fill="#c0392b"
+                        transform="translate(.5 1028.4)"
+                      />
                     </g>
-                  </g>
-                </svg>
-              }
+                  </svg>
+                }
+              />
+            </div>
+            <div className="w-full">
+              <label className="mb-1 block text-md font-medium text-gray-700">
+                Due Date
+              </label>
+              <DatePicker
+                showIcon
+                selected={editedTask.dueDate}
+                onChange={(date) => handleDateChange(date, "dueDate")}
+                className="flex border-2 rounded-md cursor-pointer w-full p-2"
+                icon={
+                  <svg
+                    className="mt-0.5"
+                    height="24"
+                    version="1.1"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g transform="translate(0 -1028.4)">
+                      <path
+                        d="m5 1032.4c-1.1046 0-2 0.9-2 2v14c0 1.1 0.8954 2 2 2h6 2 6c1.105 0 2-0.9 2-2v-14c0-1.1-0.895-2-2-2h-6-2-6z"
+                        fill="#bdc3c7"
+                      />
+                      <path
+                        d="m5 3c-1.1046 0-2 0.8954-2 2v14c0 1.105 0.8954 2 2 2h6 2 6c1.105 0 2-0.895 2-2v-14c0-1.1046-0.895-2-2-2h-6-2-6z"
+                        fill="#ecf0f1"
+                        transform="translate(0 1028.4)"
+                      />
+                      <path
+                        d="m5 3c-1.1046 0-2 0.8954-2 2v3 1h18v-1-3c0-1.1046-0.895-2-2-2h-6-2-6z"
+                        fill="#e74c3c"
+                        transform="translate(0 1028.4)"
+                      />
+                      <path
+                        d="m7 5.5a1.5 1.5 0 1 1 -3 0 1.5 1.5 0 1 1 3 0z"
+                        fill="#c0392b"
+                        transform="translate(.5 1028.4)"
+                      />
+                    </g>
+                  </svg>
+                }
+              />
+            </div>
+          </div>
+
+          {/* Estimate Time */}
+          <div>
+            <label className="mb-1 block text-md font-medium text-gray-700">
+              Estimated Time (hours)
+            </label>
+            <input
+              type="number"
+              name="estimatedTime"
+              value={editedTask.estimateTime || ""}
+              onChange={handleInputChange}
+              className="input input-bordered w-full border-2 rounded-md border-slate-200 p-2"
+              placeholder="Enter estimated time"
             />
           </div>
+
         </div>
 
         {/* Actions */}
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
-            className="btn btn-outline px-2 py-1 rounded-md text-white font-medium"
+            className="btn btn-outline px-4 py-2 rounded-md text-white font-medium"
             style={{ backgroundColor: "#95b0b0" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="btn btn-primary px-2 py-1 rounded-md text-white font-medium"
+            className="btn btn-primary px-4 py-2 rounded-md text-white font-medium"
             style={{ backgroundColor: "#00aab0" }}
           >
             Save Changes
           </button>
-          {isDeleteConfirm ? (
-            <button
-              onClick={handleDelete}
-              className="btn btn-error px-2 py-1 rounded-md text-white font-medium"
-              style={{ backgroundColor: "#ff6b6b" }}
-            >
-              Confirm Delete
-            </button>
-          ) : (
-            <button
-              onClick={handleDelete}
-              className="btn btn-error px-2 py-1 rounded-md text-white font-medium"
-              style={{ backgroundColor: "#ff6b6b" }}
-            >
-              Delete Task
-            </button>
-          )}
-          {isDeleteConfirm && (
-            <button
-              onClick={handleCancelDelete}
-              className="btn btn-outline px-2 py-1 rounded-md text-white font-medium"
-              style={{ backgroundColor: "#95b0b0" }}
-            >
-              Cancel Delete
-            </button>
-          )}
+          <button
+            onClick={handleDelete}
+            className="btn btn-danger px-4 py-2 rounded-md text-white font-medium"
+            style={{ backgroundColor: "#b74e4e" }}
+          >
+            {isDeleteConfirm ? "Confirm Delete" : "Delete Task"}
+          </button>
         </div>
       </div>
     </div>
