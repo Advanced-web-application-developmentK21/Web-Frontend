@@ -4,6 +4,8 @@ import { Task, TaskCategory } from "../../types/type";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { start } from "repl";
+import axios from "axios";
+import Swal from "sweetalert2";
 interface NewTaskProps {
   onAddTask: (newTask: Task) => void;
   onClose: () => void;
@@ -20,23 +22,16 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
     status: "todo",
     estimateTime: 0,
   });
+
   const [dateError, setDateError] = useState(true);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setTaskData({ ...taskData, [name]: value });
   };
-  const calcEstimatedTime = (startDate: Date | null, dueDate: Date | null) => {
-    if (startDate !== null && dueDate !== null) {
-      setTaskData({
-        ...taskData,
-        estimateTime: Math.ceil(
-          Math.abs(dueDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
-        ),
-      });
-    }
-  };
+
   const handleDateChange = (
     date: Date | null,
     fields: "startDate" | "dueDate"
@@ -54,46 +49,96 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
           [fields]: date,
           estimateTime: Math.ceil(
             Math.abs(taskData.startDate.getTime() - date.getTime()) /
-              (1000 * 3600 * 24)
+            (1000 * 3600 * 24)
           ),
         });
       }
     }
   };
+
   const getFormatedStringFromDays = (numberOfDays: number) => {
     const months = Math.floor((numberOfDays % 365) / 30);
     const weeks = Math.floor((numberOfDays % 365) / 7);
     const days = Math.floor(((numberOfDays % 365) % 30) % 7);
 
     const monthsDisplay =
-      months > 0 ? months + (months == 1 ? " month " : " months ") : "";
+      months > 0 ? months + (months === 1 ? " month " : " months ") : "";
     const weeksDisplay =
-      weeks > 0 ? weeks + (weeks == 1 ? " week " : " weeks ") : "";
-    const daysDisplay = days > 0 ? days + (days == 1 ? " day" : " days") : " ";
+      weeks > 0 ? weeks + (weeks === 1 ? " week " : " weeks ") : "";
+    const daysDisplay = days > 0 ? days + (days === 1 ? " day" : " days") : " ";
     return monthsDisplay + weeksDisplay + daysDisplay;
   };
 
-  const handleSubmit = () => {
-    if (!taskData.title || !taskData.dueDate) {
-      alert("Please fill all required fields!");
+  const handleSubmit = async () => {
+    if (!taskData.title.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Task name is required!",
+      });
       return;
     }
-
-    const newTask = {
-      ...taskData,
-      id: Math.random().toString(36).substr(2, 9), // Generate a random ID
+  
+    const priorityMap = {
+      low: "Low",
+      medium: "Medium",
+      high: "High",
     };
-    onAddTask(newTask);
-    setTaskData({
-      id: "",
-      title: "",
-      description: "",
-      startDate: null,
-      dueDate: null,
-      priority: "low",
-      status: "inprogress",
-      estimateTime: 0,
-    });
+  
+    const statusMap = {
+      todo: "Todo",
+      inprogress: "In Progress",
+      completed: "Completed",
+      expired: "Expired",
+    };
+  
+    const formattedData = {
+      name: taskData.title,
+      description: taskData.description,
+      priority: priorityMap[taskData.priority],
+      status: statusMap[taskData.status],
+      startDate: taskData.startDate ? taskData.startDate.toISOString() : new Date().toISOString(),
+      dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : new Date().toISOString(),
+    };
+  
+    console.log(formattedData);
+  
+    try {
+      const response = await axios.post("http://localhost:4000/task/createTasks", formattedData);
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Task added successfully!",
+      }).then(() => {
+        // Reload the page after closing the success alert
+        window.location.reload();
+      });
+      console.log(response.data);
+  
+      setTaskData({
+        id: "",
+        title: "",
+        description: "",
+        startDate: null,
+        dueDate: null,
+        priority: "low",
+        status: "inprogress",
+        estimateTime: 0,
+      });
+      onClose();
+    } catch (error: any) {
+      const errorMessage =
+        error.response && error.response.data && error.response.data.message
+          ? error.response.data.message
+          : "Failed to add task. Please try again.";
+  
+      console.error("Error creating task:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: `Error: ${errorMessage}`,
+      });
+    }
   };
 
   return (
@@ -195,6 +240,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 onChange={(date) => handleDateChange(date, "startDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
                 showTimeSelect
+                dateFormat="Pp"
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
@@ -259,6 +305,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 onChange={(date) => handleDateChange(date, "dueDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
                 showTimeSelect
+                dateFormat="Pp"
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
