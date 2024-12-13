@@ -187,6 +187,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 selected={editedTask.startDate}
                 onChange={(date) => handleDateChange(date, "startDate")}
                 className="flex border-2 rounded-md cursor-pointer w-full p-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-0.5"
@@ -229,6 +230,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 selected={editedTask.dueDate}
                 onChange={(date) => handleDateChange(date, "dueDate")}
                 className="flex border-2 rounded-md cursor-pointer w-full p-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-0.5"

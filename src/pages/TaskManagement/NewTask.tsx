@@ -194,6 +194,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 selected={taskData.startDate}
                 onChange={(date) => handleDateChange(date, "startDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
@@ -257,6 +258,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 selected={taskData.dueDate}
                 onChange={(date) => handleDateChange(date, "dueDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
