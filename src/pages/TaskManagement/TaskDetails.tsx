@@ -15,6 +15,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   onSave,
   onDelete,
 }) => {
+  const [dateError, setDateError] = useState(true);
   const [editedTask, setEditedTask] = useState<Task>({ ...task });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
@@ -30,7 +31,24 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   };
 
   const handleDateChange = (date: Date | null, field: string) => {
-    setEditedTask({ ...editedTask, [field]: date });
+    if (editedTask.startDate !== null && date !== null) {
+      if (
+        field === "dueDate" &&
+        editedTask.startDate.getTime() > date.getTime()
+      ) {
+        setDateError(false);
+      } else {
+        setDateError(true);
+        setEditedTask({
+          ...editedTask,
+          [field]: date,
+          estimateTime: Math.ceil(
+            Math.abs(editedTask.startDate.getTime() - date.getTime()) /
+              (1000 * 3600 * 24)
+          ),
+        });
+      }
+    }
   };
 
   const validateFields = (): boolean => {
@@ -51,7 +69,18 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       onClose();
     }
   };
+  const getFormatedStringFromDays = (numberOfDays: number) => {
+    const months = Math.floor((numberOfDays % 365) / 30);
+    const weeks = Math.floor((numberOfDays % 365) / 7);
+    const days = Math.floor(((numberOfDays % 365) % 30) % 7);
 
+    const monthsDisplay =
+      months > 0 ? months + (months == 1 ? " month " : " months ") : "";
+    const weeksDisplay =
+      weeks > 0 ? weeks + (weeks == 1 ? " week " : " weeks ") : "";
+    const daysDisplay = days > 0 ? days + (days == 1 ? " day" : " days") : " ";
+    return monthsDisplay + weeksDisplay + daysDisplay;
+  };
   const handleDelete = () => {
     if (isDeleteConfirm) {
       onDelete(task.id);
@@ -85,8 +114,9 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               name="title"
               value={editedTask.title}
               onChange={handleInputChange}
-              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${errors.title ? "border-red-500" : ""
-                }`}
+              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${
+                errors.title ? "border-red-500" : ""
+              }`}
             />
             {errors.title && (
               <p className="text-red-500 text-md mt-1">{errors.title}</p>
@@ -233,22 +263,28 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               />
             </div>
           </div>
-
+          {!dateError ? (
+            <span className="text-red-500 mb-3">
+              Due Date must be later than Start Date
+            </span>
+          ) : null}
           {/* Estimate Time */}
           <div>
             <label className="mb-1 block text-md font-medium text-gray-700">
-              Estimated Time (hours)
+              Estimated Time
             </label>
-            <input
+            <div className=" p-3 w-fit bg-rose-300 rounded-md pt-1 pb-2 mt-2">
+              {getFormatedStringFromDays(editedTask.estimateTime)}
+            </div>
+            {/* <input
               type="number"
               name="estimatedTime"
               value={editedTask.estimateTime || ""}
               onChange={handleInputChange}
               className="input input-bordered w-full border-2 rounded-md border-slate-200 p-2"
               placeholder="Enter estimated time"
-            />
+            /> */}
           </div>
-
         </div>
 
         {/* Actions */}
