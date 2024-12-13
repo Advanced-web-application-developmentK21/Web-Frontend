@@ -184,6 +184,16 @@ export default function Schedule() {
             showMonthYearPicker
             className="p-3 border-2 border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
           />
+          <button style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            backgroundColor: '#007BFF',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+          }}>
+            Analyze Schedule
+          </button>
         </div>
 
       </div>

@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Schedule from './pages/Schedule/SchedulePage';
 import FocusTimer from './pages/FocusTime/FocusTimerPage';
 import TaskManagement from "./pages/TaskManagement/TaskManagement";
+import Analytics from './pages/Analytics/Analytics';
 
 
 function App() {
