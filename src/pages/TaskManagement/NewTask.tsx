@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Task, TaskCategory } from "../../types/type";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { start } from "repl";
 interface NewTaskProps {
   onAddTask: (newTask: Task) => void;
   onClose: () => void;
@@ -19,16 +20,57 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
     status: "todo",
     estimateTime: 0,
   });
-
+  const [dateError, setDateError] = useState(true);
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setTaskData({ ...taskData, [name]: value });
   };
-  const handleDateChange = (date: Date | null) => {
-    console.log(date);
-    setTaskData({ ...taskData, dueDate: date });
+  const calcEstimatedTime = (startDate: Date | null, dueDate: Date | null) => {
+    if (startDate !== null && dueDate !== null) {
+      setTaskData({
+        ...taskData,
+        estimateTime: Math.ceil(
+          Math.abs(dueDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)
+        ),
+      });
+    }
+  };
+  const handleDateChange = (
+    date: Date | null,
+    fields: "startDate" | "dueDate"
+  ) => {
+    if (taskData.startDate !== null && date !== null) {
+      if (
+        fields === "dueDate" &&
+        taskData.startDate.getTime() > date.getTime()
+      ) {
+        setDateError(false);
+      } else {
+        setDateError(true);
+        setTaskData({
+          ...taskData,
+          [fields]: date,
+          estimateTime: Math.ceil(
+            Math.abs(taskData.startDate.getTime() - date.getTime()) /
+              (1000 * 3600 * 24)
+          ),
+        });
+      }
+    }
+  };
+  const getFormatedStringFromDays = (numberOfDays: number) => {
+    const months = Math.floor((numberOfDays % 365) / 30);
+    const weeks = Math.floor((numberOfDays % 365) / 7);
+    const days = Math.floor(((numberOfDays % 365) % 30) % 7);
+
+    const monthsDisplay =
+      months > 0 ? months + (months == 1 ? " month " : " months ") : "";
+    const weeksDisplay =
+      weeks > 0 ? weeks + (weeks == 1 ? " week " : " weeks ") : "";
+    const daysDisplay = days > 0 ? days + (days == 1 ? " day" : " days") : " ";
+    return monthsDisplay + weeksDisplay + daysDisplay;
   };
 
   const handleSubmit = () => {
@@ -110,9 +152,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
               fill="white"
             ></path>
           </svg>
-          <h2 className="text-2xl font-bold text-white">
-            Create New Task
-          </h2>
+          <h2 className="text-2xl font-bold text-white">Create New Task</h2>
         </div>
 
         <div className="form-control mb-2 ">
@@ -152,8 +192,9 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
               <DatePicker
                 showIcon
                 selected={taskData.startDate}
-                onChange={handleDateChange}
+                onChange={(date) => handleDateChange(date, "startDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
@@ -215,8 +256,9 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
               <DatePicker
                 showIcon
                 selected={taskData.dueDate}
-                onChange={handleDateChange}
+                onChange={(date) => handleDateChange(date, "dueDate")}
                 className="flex border-2 rounded-md cursor-pointer mt-2"
+                showTimeSelect
                 icon={
                   <svg
                     className="mt-2.5 mr-2"
@@ -268,8 +310,12 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
             </div>
           </div>
         </div>
-
-        <div className="flex justify-between">
+        {!dateError ? (
+          <span className="text-red-500 mb-3">
+            Due Date must be later than Start Date
+          </span>
+        ) : null}
+        <div className="flex justify-between  ">
           <div className="mb-2 form-control">
             <label className="label">
               <span className="label-text pr-1 font-medium">
@@ -282,7 +328,6 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 value={taskData.priority}
                 onChange={handleChange}
                 className="select select-bordered w-auto cursor-pointer border-2 rounded-md pt-1 pb-2 pr-6 mt-2"
-
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -293,9 +338,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">
-                Status
-              </span>
+              <span className="label-text pr-1 font-medium">Status</span>
             </label>
             <div>
               <select
@@ -303,7 +346,6 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 value={taskData.status}
                 onChange={handleChange}
                 className="select select-bordered w-auto cursor-pointer border-2 rounded-md pt-1 pb-2 pr-6 mt-2"
-
               >
                 <option value="todo">To do</option>
                 <option value="inprogress">In Progress</option>
@@ -315,12 +357,11 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">
-                Estimate Time
-              </span>
+              <span className="label-text pr-1 font-medium">Estimate Time</span>
             </label>
-            <div>
-              <input
+            <div className=" p-3 w-fit bg-rose-300 rounded-md pt-1 pb-2 mt-2">
+              {getFormatedStringFromDays(taskData.estimateTime)}
+              {/* <input
                 type="number"
                 name="estimateTime"
                 value={taskData.estimateTime}
@@ -332,8 +373,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
                 }
                 className="select select-bordered w-auto cursor-pointer border-2 rounded-md pt-1 pb-2 pr-2 pl-2 mt-2"
                 min={0} // Prevent negative values
-              />
-
+              /> */}
             </div>
           </div>
         </div>
@@ -353,10 +393,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
           </button>
         </div>
       </div>
-
     </div>
-
-
   );
 };
 
