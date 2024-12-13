@@ -109,8 +109,12 @@ export default function Schedule() {
 
     // Case 4: "Expired" -> stays "Expired"
     if (event.status === "Expired") {
-      newStatus = "Expired";
-    }
+      if (newStartDate.isAfter(moment()) || newEndDate.isAfter(moment())) {
+          newStatus = "Todo"; // If moved to a future date, reset to "Todo"
+      } else {
+          newStatus = "Expired"; // Otherwise, remain "Expired"
+      }
+  }
 
     // Send the updated start, end dates and status to the backend
     try {
