@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Task } from "../../types/type";
 import DatePicker from "react-datepicker";
+import axios from "axios";
+import Swal from "sweetalert2";
 
 interface TaskDetailsProps {
   task: Task;
@@ -18,8 +20,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const [dateError, setDateError] = useState(true);
   const [editedTask, setEditedTask] = useState<Task>({ ...task });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
-
+  
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -31,11 +32,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   };
 
   const handleDateChange = (date: Date | null, field: string) => {
-    if (editedTask.startDate !== null && date !== null) {
-      if (
-        field === "dueDate" &&
-        editedTask.startDate.getTime() > date.getTime()
-      ) {
+    // Ensure that startDate is a valid Date object
+    if (editedTask.startDate && date) {
+      const startDate = new Date(editedTask.startDate); // Convert it to a Date object if necessary
+      if (field === "dueDate" && startDate.getTime() > date.getTime()) {
         setDateError(false);
       } else {
         setDateError(true);
@@ -43,13 +43,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           ...editedTask,
           [field]: date,
           estimateTime: Math.ceil(
-            Math.abs(editedTask.startDate.getTime() - date.getTime()) /
-              (1000 * 3600 * 24)
+            Math.abs(startDate.getTime() - date.getTime()) / (1000 * 3600 * 24)
           ),
         });
       }
     }
-  };
+  };  
 
   const validateFields = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -63,36 +62,98 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateFields()) {
-      onSave(editedTask);
-      onClose();
+      const priorityMap = {
+        low: "Low",
+        medium: "Medium",
+        high: "High",
+      };
+    
+      const statusMap = {
+        todo: "Todo",
+        inprogress: "In Progress",
+        completed: "Completed",
+        expired: "Expired",
+      };
+
+      const formattedData = {
+        name: editedTask.title,
+        description: editedTask.description,
+        priority: priorityMap[editedTask.priority],
+        status: statusMap[editedTask.status],
+        startDate: editedTask.startDate,
+        dueDate: editedTask.dueDate
+      };
+    
+
+      try {
+        // API call to save the task
+        const response = await axios.put(
+          `http://localhost:4000/task/updateTasks/${task.id}`,
+          formattedData
+        );
+        onSave(response.data); // Assuming the API returns the updated task
+        Swal.fire({
+          title: "Success!",
+          text: "Task updated successfully.",
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then(() => {
+          // Reload the page after closing the success alert
+          window.location.reload();
+        });
+        onClose();
+      } catch (error: any) {
+        console.error("Failed to update task:", error);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     }
   };
-  const getFormatedStringFromDays = (numberOfDays: number) => {
-    const months = Math.floor((numberOfDays % 365) / 30);
-    const weeks = Math.floor((numberOfDays % 365) / 7);
-    const days = Math.floor(((numberOfDays % 365) % 30) % 7);
 
-    const monthsDisplay =
-      months > 0 ? months + (months == 1 ? " month " : " months ") : "";
-    const weeksDisplay =
-      weeks > 0 ? weeks + (weeks == 1 ? " week " : " weeks ") : "";
-    const daysDisplay = days > 0 ? days + (days == 1 ? " day" : " days") : " ";
-    return monthsDisplay + weeksDisplay + daysDisplay;
-  };
-  const handleDelete = () => {
-    if (isDeleteConfirm) {
-      onDelete(task.id);
-      onClose();
-    } else {
-      setIsDeleteConfirm(true);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setIsDeleteConfirm(false);
-  };
+  const handleDelete = async () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, keep it",
+      reverseButtons: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // API call to delete the task
+          const response = await axios.delete(`http://localhost:4000/task/deleteTasks/${task.id}`);
+          if (response.status === 200) {
+            // Task deleted successfully
+            Swal.fire({
+              title: "Deleted!",
+              text: "The task has been deleted.",
+              icon: "success",
+              confirmButtonText: "OK",
+            }).then(() => {
+              onDelete(task.id); // Update state or UI after deletion
+              onClose(); // Close the modal or dialog
+            });
+          }
+        } catch (error: any) {
+          console.error("Failed to delete task:", error);
+          Swal.fire({
+            title: "Error!",
+            text: error.response?.data?.message || "Something went wrong.",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+        }
+      }
+    });
+  };  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -170,9 +231,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 onChange={handleInputChange}
                 className="select select-bordered w-full input input-bordered border-2 rounded-md border-slate-200"
               >
+                <option value="todo">To do</option>
                 <option value="inprogress">In Progress</option>
                 <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
           </div>
@@ -184,10 +246,11 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               </label>
               <DatePicker
                 showIcon
-                selected={editedTask.startDate}
+                selected={editedTask.startDate ? new Date(editedTask.startDate) : null}
                 onChange={(date) => handleDateChange(date, "startDate")}
                 className="flex border-2 rounded-md cursor-pointer w-full p-2"
                 showTimeSelect
+                dateFormat="Pp"
                 icon={
                   <svg
                     className="mt-0.5"
@@ -227,10 +290,11 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               </label>
               <DatePicker
                 showIcon
-                selected={editedTask.dueDate}
+                selected={editedTask.dueDate ? new Date(editedTask.dueDate) : null}
                 onChange={(date) => handleDateChange(date, "dueDate")}
                 className="flex border-2 rounded-md cursor-pointer w-full p-2"
                 showTimeSelect
+                dateFormat="Pp"
                 icon={
                   <svg
                     className="mt-0.5"
@@ -271,12 +335,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             </span>
           ) : null}
           {/* Estimate Time */}
-          <div>
-            <label className="mb-1 block text-md font-medium text-gray-700">
-              Estimated Time
+          <div className="flex mt-3">
+            <label className="block text-md font-medium text-gray-700 mr-4">
+              Estimated Time:
             </label>
-            <div className=" p-3 w-fit bg-rose-300 rounded-md pt-1 pb-2 mt-2">
-              {getFormatedStringFromDays(editedTask.estimateTime)}
+            <div className="w-fit bg-rose-300 rounded-md pl-4 pr-4">
+              {editedTask.estimateTime}
             </div>
             {/* <input
               type="number"
@@ -310,7 +374,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             className="btn btn-danger px-4 py-2 rounded-md text-white font-medium"
             style={{ backgroundColor: "#b74e4e" }}
           >
-            {isDeleteConfirm ? "Confirm Delete" : "Delete Task"}
+            Delete Task
           </button>
         </div>
       </div>

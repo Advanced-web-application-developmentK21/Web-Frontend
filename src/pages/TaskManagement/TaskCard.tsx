@@ -1,6 +1,7 @@
-// TaskCard.tsx
 import React, { forwardRef } from "react";
 import { Task } from "../../types/type";
+import { format } from "date-fns"; // Importing date-fns for date formatting
+
 interface TaskCardProps {
   task: Task;
   onClick: () => void;
@@ -27,7 +28,12 @@ const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(
       inprogress: "bg-yellow-50",
       todo: "text-blue-700",
       expired: "text-red-700",
-      //overdue: "bg-red-50",
+    };
+
+    // Formatting function for dates
+    const formatDate = (date: Date | null) => {
+      if (!date) return "No Date";
+      return format(new Date(date), "PPPpp"); // Formats to something like: Dec 13, 2024, 5:32 PM
     };
 
     return (
@@ -53,7 +59,12 @@ const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(
             {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
           </span>
           <span className="text-base text-gray-500">
-            {task.dueDate ? `Due: ${task.dueDate}` : "No Due Date"}
+            {task.dueDate ? `Due: ${formatDate(task.dueDate)}` : "No Due Date"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-sm text-gray-500">
+            {task.startDate ? `Start: ${formatDate(task.startDate)}` : "No Start Date"}
           </span>
         </div>
       </div>
