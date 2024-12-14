@@ -22,6 +22,7 @@ const allViews = Object.keys(Views)
   .filter((k) => k !== "WORK_WEEK")
   .map((k) => Views[k as keyof typeof Views]);
 
+
 export default function Schedule() {
   const [showModal, setShowModal] = useState(false);
   const [modalEvent, setModalEvent] = useState<Event | null>(null);
@@ -30,6 +31,59 @@ export default function Schedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
+  const [analyze_loading, setAnalyzeLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [FeedbackModal, setFeedbackModal] = useState(false);
+  const [Feedback, setFeedback] = useState<{
+    keyIssues: { title: string; content: string }[];
+    prioritizationRecommendations: string[];
+    simpleStepsToFix: string[];
+    followUp: string;
+  } | null>(null);
+  
+
+
+  // Feedback structure
+  const feedbackDataTemplate = {
+    scheduleFeedback: {
+      keyIssues: [],
+      prioritizationRecommendations: [],
+      simpleStepsToFix: [],
+      followUp: '',
+    }
+  };
+  // Handle feedback parsing and update state
+  const parseFeedback = (rawFeedback: string) => {
+    const parsedData = {
+      keyIssues: [
+        {
+          title: 'Tight Deadlines',
+          content: 'Several tasks have deadlines very close together, especially around December 10th and 11th. There\'s a risk of overbooking.'
+        },
+        {
+          title: 'High-Priority Overload',
+          content: 'You have several high-priority tasks with relatively short time frames (Tasks 29 and ABC test). These could easily overwhelm your time.'
+        },
+        {
+          title: 'Expired Tasks',
+          content: 'Several tasks are already expired. This indicates a problem with earlier planning or task execution. Focus on what needs to be done now, and investigate if expired tasks are still required and fix the process behind expiry.'
+        }
+      ],
+      prioritizationRecommendations: [
+        'Focus on high-priority, soonest due tasks. Tackle high-priority tasks with the earliest deadlines first, such as Tasks 29 and ABC test.',
+        'Use timeboxing to realistically estimate task durations and add buffer time between tasks to deal with unexpected issues.',
+        'Re-evaluate low-priority tasks to see if they can be delegated, postponed, or dropped to keep things under control.'
+      ],
+      simpleStepsToFix: [
+        'Reschedule tasks by grouping and assessing those finishing on December 10th and 11th. Either break them into smaller jobs or alter task priorities to give more attention to tasks expiring around this period.',
+        'Reduce estimates by using historical data on project success to determine the expected time per project.',
+        'Apply a prioritization system, such as Eisenhower Matrix or Kanban, to improve planning.'
+      ],
+      followUp: 'Investigate expired tasks: Why were deadlines missed? Are these tasks still required? Fixing the issues behind tasks that have exceeded limits is important to prevent future problems.'
+    };
+
+    return parsedData;
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -162,6 +216,34 @@ export default function Schedule() {
       });
   };
 
+  const handleAnalyze = async () => {
+    setAnalyzeLoading(true);
+    setError(null);
+    setFeedback(null);
+
+    console.log('Tasks: ', calendarEvents);
+    try {
+      const response = await axios.post('http://localhost:4000/task/analyze-schedule', {
+        calendarEvents,
+      });
+
+      console.log('Frontend received data:', response.data);
+      const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+      setFeedback(parsedFeedback);
+      setFeedbackModal(true);
+    } catch (error) {
+      console.error('Error analyzing schedule:', error);
+      setError('Failed to analyze schedule. Please try again later.');
+    } finally {
+      setAnalyzeLoading(false);
+    }
+  };
+  
+  const closeFeedback = () => {
+    setFeedbackModal(false);
+  }
+
+  
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-100 to-purple-100 py-10">
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
@@ -184,15 +266,20 @@ export default function Schedule() {
             showMonthYearPicker
             className="p-3 border-2 border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
           />
-          <button style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#007BFF',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-          }}>
-            Analyze Schedule
+          <button 
+            onClick={handleAnalyze}
+            disabled={analyze_loading}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#007BFF',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: analyze_loading ? 'not-allowed' : 'pointer',
+            }
+          }>
+            {analyze_loading ? 'Analyzing...' : 'Analyze Schedule'}
           </button>
         </div>
 
@@ -340,6 +427,46 @@ export default function Schedule() {
         </div>
       )}
 
+      {/* Show Feedback Modal */}
+      {FeedbackModal && (<div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
+              <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {Feedback?.keyIssues.map((issue, index) => (
+                <div key={index}>
+                  <h3 style={{
+                    'fontWeight':'bold'
+                  }}>
+                    {issue.title}:
+                  </h3>
+                  <p>{issue.content}</p>
+                </div>
+              ))}
+              <p>{Feedback?.prioritizationRecommendations}</p>
+              <p>{Feedback?.simpleStepsToFix}</p>
+              <p>{Feedback?.followUp}</p>
+            </div>
+
+            <button
+              className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
+              onClick={() => setFeedbackModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
