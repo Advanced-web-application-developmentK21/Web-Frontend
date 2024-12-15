@@ -36,74 +36,55 @@ export default function Schedule() {
   const [FeedbackModal, setFeedbackModal] = useState(false);
   const [Feedback, setFeedback] = useState<{
     keyIssues: { title: string; content: string }[];
-    prioritizationRecommendations: string[];
-    simpleStepsToFix: string[];
-    followUp: string;
   } | null>(null);
 
-
-
-  // Feedback structure
-  type FeedbackType = {
-    keyIssues: { title: string; content: string }[];
-    prioritizationRecommendations: string[];
-    simpleStepsToFix: string[];
-    followUp: string;
-  };
-
   // Handle feedback parsing and update state
-  const parseFeedback = (feedbackText: string) => {
-    const keyIssues: { title: string; content: string }[] = [];
-    const prioritizationRecommendations: string[] = [];
-    let simpleStepsToFix: string[] = []; // Adding array to hold simple steps
-    let followUp = "";
+  function parseFeedback(rawText: string) {
+    const lines = rawText.split('\n'); // Split the text by newline
+    let keyIssues: { title: string; content: string }[] = [];
+    let currentTitle = "";
+    let currentContent: string[] = [];
+    let insideList = false; // To track if inside a numbered or bullet list
 
-    // Define explicit types for currentSection
-    let currentSection: 'keyIssues' | 'prioritizationRecommendations' | 'simpleStepsToFix' | null = null;
+    // Iterate through each line
+    lines.forEach(line => {
+      // Check if the line starts with "**" to capture titles
+      const titleMatch = line.match(/^\*\*([^*]+)\*\*/); // Match bold title
 
-    // Split the text into lines for processing
-    const lines = feedbackText.split('\n');
-
-    lines.forEach((line) => {
-      if (line.startsWith('**Warnings:**')) {
-        currentSection = 'keyIssues';
-      } else if (line.startsWith('**Recommendations:**')) {
-        currentSection = 'prioritizationRecommendations';
-      } else if (line.startsWith('**Actionable Steps:**')) {  // Add section for simple steps
-        currentSection = 'simpleStepsToFix';
-      } else if (line.trim()) {
-        switch (currentSection) {
-          case 'keyIssues':
-            keyIssues.push({ title: 'Warning', content: line.trim().replace('*', '').trim() });
-            break;
-          case 'prioritizationRecommendations':
-            prioritizationRecommendations.push(line.trim().replace(/[0-9]+\./, '').trim());
-            break;
-          case 'simpleStepsToFix':  // Handle simple steps
-            simpleStepsToFix.push(line.trim());
-            break;
-          default:
-            followUp += `${line.trim()} `;
-            break;
+      if (titleMatch) {
+        // If we already have content for a previous title, save it
+        if (currentContent.length > 0) {
+          keyIssues.push({
+            title: `**${currentTitle.trim()}**`, // Bold title
+            content: currentContent.join('\n').trim(),
+          });
         }
+
+        // Set the new title and reset the content array
+        currentTitle = titleMatch[1];
+        currentContent = [];
+        insideList = false; // Reset list tracking
+      } else if (line.match(/^\d+\./) || line.match(/^\* /)) {
+        // Check if the line is part of a numbered list or bullet list
+        if (!insideList) {
+          insideList = true;
+        }
+        currentContent.push(line.trim()); // Add the list item content
+      } else if (line.trim() !== "") {
+        // Add any other regular content
+        currentContent.push(line.trim());
       }
     });
 
-    if (simpleStepsToFix.length === 0) {
-      simpleStepsToFix = [
-        "Review the tasks and adjust priorities as needed.",
-        "Ensure all overdue tasks are rescheduled immediately.",
-        "Reevaluate task durations to avoid bottlenecks."
-      ];
+    // Push the last title and content if there was any content
+    if (currentContent.length > 0) {
+      keyIssues.push({
+        title: `**${currentTitle.trim()}**`, // Bold title
+        content: currentContent.join('\n').trim(),
+      });
     }
-
-    return {
-      keyIssues,
-      prioritizationRecommendations,
-      simpleStepsToFix,
-      followUp: followUp.trim(),
-    };
-  };
+    return { keyIssues };
+  }
 
 
   useEffect(() => {
@@ -243,44 +224,21 @@ export default function Schedule() {
     setFeedback(null);
 
     console.log('Tasks: ', calendarEvents);
+    try {
+      const response = await axios.post('http://localhost:4000/task/analyze-schedule', {
+        calendarEvents,
+      });
 
-    const retryLimit = 10; // Number of retry attempts
-    let attempt = 0;
-    let parsedFeedback = null;
-
-    while (attempt < retryLimit && (!parsedFeedback?.keyIssues || parsedFeedback.keyIssues.length === 0)) {
-      try {
-        const response = await axios.post('http://localhost:4000/task/analyze-schedule', {
-          calendarEvents,
-        });
-
-        console.log('Frontend received data:', response.data);
-        parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
-
-        console.log('Parsed Feedback:', parsedFeedback);
-
-        // If there are no warnings, try again
-        if (!parsedFeedback.keyIssues || parsedFeedback.keyIssues.length === 0) {
-          console.log('No warnings found, retrying...');
-          attempt++;
-        } else {
-          break; // Exit the loop if warnings are found
-        }
-      } catch (error) {
-        console.error('Error analyzing schedule:', error);
-        setError('Failed to analyze schedule. Please try again later.');
-        break; // Exit on error
-      }
-    }
-
-    if (parsedFeedback?.keyIssues && parsedFeedback.keyIssues.length > 0) {
+      console.log('Frontend received data:', response.data);
+      const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
       setFeedback(parsedFeedback);
       setFeedbackModal(true);
-    } else {
-      setError('No warnings found after multiple attempts.');
+    } catch (error) {
+      console.error('Error analyzing schedule:', error);
+      setError('Failed to analyze schedule. Please try again later.');
+    } finally {
+      setAnalyzeLoading(false);
     }
-
-    setAnalyzeLoading(false);
   };
 
   const closeFeedback = () => {
@@ -483,56 +441,197 @@ export default function Schedule() {
           >
             <div className="text-center mb-8">
               <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
-              <p className="text-lg text-gray-600">Here is the feedback about your schedule.</p>
+              <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
             </div>
 
             <div className="space-y-6 mb-6">
-              {/* Key Issues */}
-              <div className="bg-yellow-50 p-4 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                  <span className="text-yellow-500 mr-2">⚠️</span> Key Issues
-                </h3>
-                {Feedback?.keyIssues.map((issue, index) => (
-                  <div key={index} className="mb-4">
-                    <h4 className="font-semibold text-gray-700">{issue.title}:</h4>
-                    <p className="text-gray-600">{issue.content}</p>
+              {Feedback?.keyIssues.map((issue, index) => {
+
+                
+                // Check if the issue title is empty, if it is return null for that iteration
+                if (!issue.title.trim()) return null;
+                
+                // Check for specific titles and apply the custom box styling
+                if (issue.title.trim() === '**Warnings:**' || issue.title.trim() === '**Problems:**') {
+                  return (
+                    <div key={index} className="bg-yellow-50 p-4 rounded-lg shadow-md">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <span className="text-yellow-500 mr-2">
+                          {issue.title.replace(/\*\*/g, '')}
+                        </span>
+                      </h3>
+
+                      {/* Iterate over each line of the content */}
+                      {issue.content.split('\n').map((line, lineIndex) => {
+                        // Clean the line by removing asterisks, stars, etc.
+                        const cleanLine = line
+                          .replace(/\*\*/g, '')  // Remove bold markers (**)
+                          .replace(/\*/g, '')    // Remove italic markers (*)
+                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                          .trim(); // Remove any extra leading/trailing whitespace
+
+                        const isBullet = cleanLine.startsWith('•');
+                        const isNumbered = /^\d+\./.test(cleanLine);
+
+                        return (
+                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                            {/* Handle bullets */}
+                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+                            
+                            {/* Handle numbered list */}
+                            {!isNumbered && cleanLine && (
+                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                {lineIndex + 1}.
+                              </span>
+                            )}
+                            
+                            {/* Display clean content */}
+                            <span>{cleanLine}</span>
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                } else if (issue.title.trim() === '**Prioritization Recommendations:**' || issue.title.trim() === '**Recommendations:**') {
+                  return (
+                    <div key={index} className="bg-blue-50 p-4 rounded-lg shadow-md">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <span className="text-blue-500 mr-2">
+                          {issue.title.replace(/\*\*/g, '')}
+                        </span> 
+                      </h3>
+                      {/* Iterate over each line of the content */}
+                      {issue.content.split('\n').map((line, lineIndex) => {
+                        // Clean the line by removing asterisks, stars, etc.
+                        const cleanLine = line
+                          .replace(/\*\*/g, '')  // Remove bold markers (**)
+                          .replace(/\*/g, '')    // Remove italic markers (*)
+                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                          .trim(); // Remove any extra leading/trailing whitespace
+
+                        const isBullet = cleanLine.startsWith('•');
+                        const isNumbered = /^\d+\./.test(cleanLine);
+
+                        return (
+                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                            {/* Handle bullets */}
+                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+                            
+                            {/* Handle numbered list */}
+                            {!isNumbered && cleanLine && (
+                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                {lineIndex + 1}.
+                              </span>
+                            )}
+                            
+                            {/* Display clean content */}
+                            <span>{cleanLine}</span>
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                } else if (issue.title.trim() === '**Simple Steps to Fix:**') {
+                  return (
+                    <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <span className="text-green-500 mr-2">
+                        {issue.title.replace(/\*\*/g, '')}
+                        </span>
+                      </h3>
+                      {/* Iterate over each line of the content */}
+                      {issue.content.split('\n').map((line, lineIndex) => {
+                        // Clean the line by removing asterisks, stars, etc.
+                        const cleanLine = line
+                          .replace(/\*\*/g, '')  // Remove bold markers (**)
+                          .replace(/\*/g, '')    // Remove italic markers (*)
+                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                          .trim(); // Remove any extra leading/trailing whitespace
+
+                        const isBullet = cleanLine.startsWith('•');
+                        const isNumbered = /^\d+\./.test(cleanLine);
+
+                        return (
+                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                            {/* Handle bullets */}
+                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+                            
+                            {/* Handle numbered list */}
+                            {!isNumbered && cleanLine && (
+                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                {lineIndex + 1}.
+                              </span>
+                            )}
+                            
+                            {/* Display clean content */}
+                            <span>{cleanLine}</span>
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                } return (
+                  <div key={index}>
+                    {/* Render the title with or without bold markers */}
+                    <h3 style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#333' }}>
+                      {issue.title.replace(/\*\*/g, '')}
+                    </h3>
+
+                    <div style={{ paddingLeft: '1.5rem', lineHeight: '1.5' }}>
+                      {/* Check if the title is empty to avoid numbering content */}
+                      {issue.title.trim() !== "****" && (
+                        issue.content.split('\n').map((line, lineIndex) => {
+                          // Clean the line by removing asterisks, stars, etc.
+                          const cleanLine = line
+                            .replace(/\*\*/g, '')  // Remove bold markers (**)
+                            .replace(/\*/g, '')    // Remove italic markers (*)
+                            .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                            .trim(); // Remove any extra leading/trailing whitespace
+
+                          const isBullet = cleanLine.startsWith('•');
+                          const isNumbered = /^\d+\./.test(cleanLine);
+                          
+                          return (
+                            <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                              {/* Handle bullets */}
+                              {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+                              
+                              {/* Handle numbered list but only if it doesn't already have numbering */}
+                              {!isNumbered && cleanLine && (
+                                <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                  {lineIndex + 1}.
+                                </span>
+                              )}
+                              
+                              {/* Display clean content */}
+                              <span>{cleanLine}</span>
+                            </p>
+                          );
+                        })
+                      )}
+
+                      {/* If the title is empty, display the content without numbering */}
+                      {issue.title.trim() === "****" && (
+                        issue.content.split('\n').map((line, lineIndex) => {
+                          // Clean the line by removing asterisks, stars, etc.
+                          const cleanLine = line
+                            .replace(/\*\*/g, '')  // Remove bold markers (**)
+                            .replace(/\*/g, '')    // Remove italic markers (*)
+                            .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                            .trim(); // Remove any extra leading/trailing whitespace
+
+                          return (
+                            <span key={lineIndex}>{cleanLine}</span> // Render the cleaned line
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Prioritization Recommendations */}
-              <div className="bg-blue-50 p-4 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                  <span className="text-blue-500 mr-2">🔍</span> Prioritization Recommendations
-                </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-2">
-                  {Feedback?.prioritizationRecommendations.map((recommendation, index) => (
-                    <li key={index}>{recommendation}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Simple Steps to Fix */}
-              <div className="bg-green-50 p-4 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                  <span className="text-green-500 mr-2">✔️</span> Simple Steps to Fix
-                </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-2">
-                  {Feedback?.simpleStepsToFix.map((step, index) => (
-                    <li key={index}>{step}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Follow-Up */}
-              <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                  <span className="text-gray-500 mr-2">⏳</span> Follow-Up
-                </h3>
-                <p className="text-gray-600">{Feedback?.followUp}</p>
-              </div>
+                );
+              })}
             </div>
 
+            {/* Close Button*/}
             <button
               className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
               onClick={() => setFeedbackModal(false)}
