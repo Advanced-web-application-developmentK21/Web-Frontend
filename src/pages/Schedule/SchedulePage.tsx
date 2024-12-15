@@ -40,50 +40,71 @@ export default function Schedule() {
     simpleStepsToFix: string[];
     followUp: string;
   } | null>(null);
-  
+
 
 
   // Feedback structure
-  const feedbackDataTemplate = {
-    scheduleFeedback: {
-      keyIssues: [],
-      prioritizationRecommendations: [],
-      simpleStepsToFix: [],
-      followUp: '',
-    }
+  type FeedbackType = {
+    keyIssues: { title: string; content: string }[];
+    prioritizationRecommendations: string[];
+    simpleStepsToFix: string[];
+    followUp: string;
   };
-  // Handle feedback parsing and update state
-  const parseFeedback = (rawFeedback: string) => {
-    const parsedData = {
-      keyIssues: [
-        {
-          title: 'Tight Deadlines',
-          content: 'Several tasks have deadlines very close together, especially around December 10th and 11th. There\'s a risk of overbooking.'
-        },
-        {
-          title: 'High-Priority Overload',
-          content: 'You have several high-priority tasks with relatively short time frames (Tasks 29 and ABC test). These could easily overwhelm your time.'
-        },
-        {
-          title: 'Expired Tasks',
-          content: 'Several tasks are already expired. This indicates a problem with earlier planning or task execution. Focus on what needs to be done now, and investigate if expired tasks are still required and fix the process behind expiry.'
-        }
-      ],
-      prioritizationRecommendations: [
-        'Focus on high-priority, soonest due tasks. Tackle high-priority tasks with the earliest deadlines first, such as Tasks 29 and ABC test.',
-        'Use timeboxing to realistically estimate task durations and add buffer time between tasks to deal with unexpected issues.',
-        'Re-evaluate low-priority tasks to see if they can be delegated, postponed, or dropped to keep things under control.'
-      ],
-      simpleStepsToFix: [
-        'Reschedule tasks by grouping and assessing those finishing on December 10th and 11th. Either break them into smaller jobs or alter task priorities to give more attention to tasks expiring around this period.',
-        'Reduce estimates by using historical data on project success to determine the expected time per project.',
-        'Apply a prioritization system, such as Eisenhower Matrix or Kanban, to improve planning.'
-      ],
-      followUp: 'Investigate expired tasks: Why were deadlines missed? Are these tasks still required? Fixing the issues behind tasks that have exceeded limits is important to prevent future problems.'
-    };
 
-    return parsedData;
+  // Handle feedback parsing and update state
+  const parseFeedback = (feedbackText: string) => {
+    const keyIssues: { title: string; content: string }[] = [];
+    const prioritizationRecommendations: string[] = [];
+    let simpleStepsToFix: string[] = []; // Adding array to hold simple steps
+    let followUp = "";
+
+    // Define explicit types for currentSection
+    let currentSection: 'keyIssues' | 'prioritizationRecommendations' | 'simpleStepsToFix' | null = null;
+
+    // Split the text into lines for processing
+    const lines = feedbackText.split('\n');
+
+    lines.forEach((line) => {
+      if (line.startsWith('**Warnings:**')) {
+        currentSection = 'keyIssues';
+      } else if (line.startsWith('**Recommendations:**')) {
+        currentSection = 'prioritizationRecommendations';
+      } else if (line.startsWith('**Actionable Steps:**')) {  // Add section for simple steps
+        currentSection = 'simpleStepsToFix';
+      } else if (line.trim()) {
+        switch (currentSection) {
+          case 'keyIssues':
+            keyIssues.push({ title: 'Warning', content: line.trim().replace('*', '').trim() });
+            break;
+          case 'prioritizationRecommendations':
+            prioritizationRecommendations.push(line.trim().replace(/[0-9]+\./, '').trim());
+            break;
+          case 'simpleStepsToFix':  // Handle simple steps
+            simpleStepsToFix.push(line.trim());
+            break;
+          default:
+            followUp += `${line.trim()} `;
+            break;
+        }
+      }
+    });
+
+    if (simpleStepsToFix.length === 0) {
+      simpleStepsToFix = [
+        "Review the tasks and adjust priorities as needed.",
+        "Ensure all overdue tasks are rescheduled immediately.",
+        "Reevaluate task durations to avoid bottlenecks."
+      ];
+    }
+
+    return {
+      keyIssues,
+      prioritizationRecommendations,
+      simpleStepsToFix,
+      followUp: followUp.trim(),
+    };
   };
+
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -164,11 +185,11 @@ export default function Schedule() {
     // Case 4: "Expired" -> stays "Expired"
     if (event.status === "Expired") {
       if (newStartDate.isAfter(moment()) || newEndDate.isAfter(moment())) {
-          newStatus = "Todo"; // If moved to a future date, reset to "Todo"
+        newStatus = "Todo"; // If moved to a future date, reset to "Todo"
       } else {
-          newStatus = "Expired"; // Otherwise, remain "Expired"
+        newStatus = "Expired"; // Otherwise, remain "Expired"
       }
-  }
+    }
 
     // Send the updated start, end dates and status to the backend
     try {
@@ -222,28 +243,51 @@ export default function Schedule() {
     setFeedback(null);
 
     console.log('Tasks: ', calendarEvents);
-    try {
-      const response = await axios.post('http://localhost:4000/task/analyze-schedule', {
-        calendarEvents,
-      });
 
-      console.log('Frontend received data:', response.data);
-      const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+    const retryLimit = 10; // Number of retry attempts
+    let attempt = 0;
+    let parsedFeedback = null;
+
+    while (attempt < retryLimit && (!parsedFeedback?.keyIssues || parsedFeedback.keyIssues.length === 0)) {
+      try {
+        const response = await axios.post('http://localhost:4000/task/analyze-schedule', {
+          calendarEvents,
+        });
+
+        console.log('Frontend received data:', response.data);
+        parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+
+        console.log('Parsed Feedback:', parsedFeedback);
+
+        // If there are no warnings, try again
+        if (!parsedFeedback.keyIssues || parsedFeedback.keyIssues.length === 0) {
+          console.log('No warnings found, retrying...');
+          attempt++;
+        } else {
+          break; // Exit the loop if warnings are found
+        }
+      } catch (error) {
+        console.error('Error analyzing schedule:', error);
+        setError('Failed to analyze schedule. Please try again later.');
+        break; // Exit on error
+      }
+    }
+
+    if (parsedFeedback?.keyIssues && parsedFeedback.keyIssues.length > 0) {
       setFeedback(parsedFeedback);
       setFeedbackModal(true);
-    } catch (error) {
-      console.error('Error analyzing schedule:', error);
-      setError('Failed to analyze schedule. Please try again later.');
-    } finally {
-      setAnalyzeLoading(false);
+    } else {
+      setError('No warnings found after multiple attempts.');
     }
+
+    setAnalyzeLoading(false);
   };
-  
+
   const closeFeedback = () => {
     setFeedbackModal(false);
   }
 
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-100 to-purple-100 py-10">
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
@@ -266,7 +310,7 @@ export default function Schedule() {
             showMonthYearPicker
             className="p-3 border-2 border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
           />
-          <button 
+          <button
             onClick={handleAnalyze}
             disabled={analyze_loading}
             style={{
@@ -278,7 +322,7 @@ export default function Schedule() {
               borderRadius: '5px',
               cursor: analyze_loading ? 'not-allowed' : 'pointer',
             }
-          }>
+            }>
             {analyze_loading ? 'Analyzing...' : 'Analyze Schedule'}
           </button>
         </div>
@@ -428,33 +472,65 @@ export default function Schedule() {
       )}
 
       {/* Show Feedback Modal */}
-      {FeedbackModal && (<div
+      {FeedbackModal && (
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
-          onClick={() => setShowModal(false)}
+          onClick={() => setFeedbackModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
+            className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-8">
               <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
-              <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
+              <p className="text-lg text-gray-600">Here is the feedback about your schedule.</p>
             </div>
 
-            <div className="space-y-4 mb-6">
-              {Feedback?.keyIssues.map((issue, index) => (
-                <div key={index}>
-                  <h3 style={{
-                    'fontWeight':'bold'
-                  }}>
-                    {issue.title}:
-                  </h3>
-                  <p>{issue.content}</p>
-                </div>
-              ))}
-              <p>{Feedback?.prioritizationRecommendations}</p>
-              <p>{Feedback?.simpleStepsToFix}</p>
-              <p>{Feedback?.followUp}</p>
+            <div className="space-y-6 mb-6">
+              {/* Key Issues */}
+              <div className="bg-yellow-50 p-4 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                  <span className="text-yellow-500 mr-2">⚠️</span> Key Issues
+                </h3>
+                {Feedback?.keyIssues.map((issue, index) => (
+                  <div key={index} className="mb-4">
+                    <h4 className="font-semibold text-gray-700">{issue.title}:</h4>
+                    <p className="text-gray-600">{issue.content}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Prioritization Recommendations */}
+              <div className="bg-blue-50 p-4 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                  <span className="text-blue-500 mr-2">🔍</span> Prioritization Recommendations
+                </h3>
+                <ul className="list-disc list-inside text-gray-600 space-y-2">
+                  {Feedback?.prioritizationRecommendations.map((recommendation, index) => (
+                    <li key={index}>{recommendation}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Simple Steps to Fix */}
+              <div className="bg-green-50 p-4 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                  <span className="text-green-500 mr-2">✔️</span> Simple Steps to Fix
+                </h3>
+                <ul className="list-disc list-inside text-gray-600 space-y-2">
+                  {Feedback?.simpleStepsToFix.map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Follow-Up */}
+              <div className="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                  <span className="text-gray-500 mr-2">⏳</span> Follow-Up
+                </h3>
+                <p className="text-gray-600">{Feedback?.followUp}</p>
+              </div>
             </div>
 
             <button
@@ -466,7 +542,7 @@ export default function Schedule() {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
