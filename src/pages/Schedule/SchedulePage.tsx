@@ -13,6 +13,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import axios from "axios";
+import { FaCheckCircle, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -241,11 +242,6 @@ export default function Schedule() {
     }
   };
 
-  const closeFeedback = () => {
-    setFeedbackModal(false);
-  }
-
-
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-100 to-purple-100 py-10">
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
@@ -456,6 +452,7 @@ export default function Schedule() {
                   return (
                     <div key={index} className="bg-yellow-50 p-4 rounded-lg shadow-md">
                       <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <FaExclamationTriangle className="text-yellow-500 mr-2" />
                         <span className="text-yellow-500 mr-2">
                           {issue.title.replace(/\*\*/g, '')}
                         </span>
@@ -496,6 +493,7 @@ export default function Schedule() {
                   return (
                     <div key={index} className="bg-blue-50 p-4 rounded-lg shadow-md">
                       <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <FaClipboardList className="text-blue-500 mr-2" />
                         <span className="text-blue-500 mr-2">
                           {issue.title.replace(/\*\*/g, '')}
                         </span> 
@@ -535,6 +533,7 @@ export default function Schedule() {
                   return (
                     <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
                       <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <FaCheckCircle className="text-green-500 mr-2" />
                         <span className="text-green-500 mr-2">
                         {issue.title.replace(/\*\*/g, '')}
                         </span>
