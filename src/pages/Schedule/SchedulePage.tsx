@@ -14,6 +14,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import axios from "axios";
 import { FaCheckCircle, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -184,6 +185,13 @@ export default function Schedule() {
       // Optionally, update the local event's status and dates
       const updatedEvent = updatedEvents.find((e) => e.id === event.id);
       if (updatedEvent) {
+        Swal.fire({
+          icon: "success",
+          title: "Update Task Successful!",
+          text: "You can check task now.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         updatedEvent.status = newStatus;
         updatedEvent.start = new Date(start);
         updatedEvent.end = new Date(end);
@@ -226,7 +234,7 @@ export default function Schedule() {
 
     console.log('Tasks: ', calendarEvents);
     try {
-      const response = await axios.post('${process.env.REACT_APP_BACKEND_URL}/task/analyze-schedule', {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/task/analyze-schedule`, {
         calendarEvents,
       });
 
@@ -247,7 +255,7 @@ export default function Schedule() {
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
         📅{" "}
         <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
-          Event Calendar
+          Task Calendar
         </span>
       </h1>
 
