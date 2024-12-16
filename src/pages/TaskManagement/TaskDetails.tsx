@@ -90,7 +90,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       try {
         // API call to save the task
         const response = await axios.put(
-          `http://localhost:4000/task/updateTasks/${task.id}`,
+          `${process.env.REACT_APP_BACKEND_URL}/task/updateTasks/${task.id}`,
           formattedData
         );
         onSave(response.data); // Assuming the API returns the updated task
@@ -129,7 +129,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       if (result.isConfirmed) {
         try {
           // API call to delete the task
-          const response = await axios.delete(`http://localhost:4000/task/deleteTasks/${task.id}`);
+          const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/task/deleteTasks/${task.id}`);
           if (response.status === 200) {
             // Task deleted successfully
             Swal.fire({
