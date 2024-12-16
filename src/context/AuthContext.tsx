@@ -8,7 +8,7 @@ interface AuthContextType {
   userPassword: string | null;
   userCreatedAt: string | null;
   token: string | null;
-  login: (userDataId: string, userDataName: string, userToken: string) => void;
+  login: (userDataId: string, userDataName: string, userEmail: string, userPassword: string, userCreatedAt: string, userToken: string) => void;
   loadProfileData: (userDataEmail: string, userDataPassword: string, userDataCreatedAt: string) => void;
   logout: () => void;
 }
@@ -40,16 +40,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
 
   // Login function with necessary user details for authentication
-  const login = (userDataId: string, userDataName: string, userToken: string) => {
+  const login = (userDataId: string, userDataName: string, userEmail: string, userPassword: string, userCreatedAt: string, userToken: string) => {
     setUserId(userDataId);
     setUserName(userDataName);
+    setUserEmail(userEmail);         // Store user_email
+    setUserPassword(userPassword);   // Store user_password
+    setUserCreatedAt(userCreatedAt); // Store user_created_at
     setToken(userToken);
 
-    // Store only the required data in localStorage
+    // Store all necessary data in localStorage
     localStorage.setItem('userId', JSON.stringify(userDataId));
     localStorage.setItem('userName', JSON.stringify(userDataName));
+    localStorage.setItem('userEmail', JSON.stringify(userEmail));
+    localStorage.setItem('userPassword', JSON.stringify(userPassword));
+    localStorage.setItem('userCreatedAt', JSON.stringify(userCreatedAt));
     localStorage.setItem('token', userToken);
-  };
+};
 
   // Load additional profile data
   const loadProfileData = (userDataEmail: string, userDataPassword: string, userDataCreatedAt: string) => {

@@ -32,7 +32,7 @@ const TaskList: React.FC = () => {
 
     const fetchTasks = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/task/getOptionTasks");
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/task/getOptionTasks`);
         const fetchedTasks = response.data.data.map((task: any) => ({
           id: task._id,
           title: task.name,

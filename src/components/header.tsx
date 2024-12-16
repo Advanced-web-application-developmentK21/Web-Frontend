@@ -1,27 +1,46 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import classNames from "classnames";
 import { PiHandWavingThin } from "react-icons/pi";
 import { IoNotificationsOutline } from "react-icons/io5";
 import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 import "../styles/Header.css";
 import { useSideBarToggle } from "../hooks/use-sidebar-toggle";
+import { useAuth } from "../context/AuthContext";
 
 const Header: React.FC = () => {
   const { toggleCollapse } = useSideBarToggle();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { logout } = useAuth();
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
+    setDropdownOpen((prevState) => !prevState);
   };
 
   const handleProfileClick = () => {
-    // window.location.href = "/admin/profile"; // Chuyển hướng tới trang profile
+    window.location.href = "/profile";
   };
 
   const handleLogout = () => {
-    
+    logout();
+    window.location.href = "/auth";
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const headerStyle = classNames({
     ["header isWide"]: !toggleCollapse,
@@ -38,12 +57,11 @@ const Header: React.FC = () => {
       </div>
 
       <div className="right-items">
-
         <div className="notification">
           <IoNotificationsOutline size={20} />
         </div>
 
-        <div className="user-setting">
+        <div className="user-setting" ref={dropdownRef}>
           <FaUserCircle
             size={35}
             className="user-icon"
