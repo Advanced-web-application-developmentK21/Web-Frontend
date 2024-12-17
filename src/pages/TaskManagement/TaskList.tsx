@@ -34,7 +34,7 @@ const TaskList: React.FC = () => {
 
     const fetchTasks = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/task/getOptionTasks/${userId}`);
+        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
         const fetchedTasks = response.data.data.map((task: any) => ({
           id: task._id,
           title: task.name,
@@ -195,13 +195,17 @@ const TaskList: React.FC = () => {
 
             {/* Task Cards */}
             <div className="flex flex-col gap-4">
-              {currentTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onClick={() => handleTaskClick(task)}
-                />
-              ))}
+              {currentTasks.length === 0 ? (
+                <p className="text-center text-lg text-gray-600">No tasks available.</p>
+              ) : (
+                currentTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onClick={() => handleTaskClick(task)}
+                  />
+                ))
+              )}
             </div>
           </>
         )}

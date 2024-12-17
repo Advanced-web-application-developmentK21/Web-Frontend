@@ -15,7 +15,7 @@ const GoogleLoginSuccess: React.FC = () => {
 
   const handleSetPassword = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/user/update-password`, {
+      const response = await axios.post(`http://localhost:4000/user/update-password`, {
         email,
         username,
         password: newPassword || currentPassword, // Sử dụng password cũ nếu không nhập mới

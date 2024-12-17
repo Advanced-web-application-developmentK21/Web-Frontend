@@ -13,8 +13,9 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import axios from "axios";
-import { FaCheckCircle, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
+import { FaCheckCircle, FaClipboardList, FaEdit, FaExclamationTriangle, FaRegClock, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { IoClose } from "react-icons/io5";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -94,7 +95,7 @@ export default function Schedule() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/task/getOptionTasks/${userId}`);
+        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
         const fetchedEvents = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
@@ -178,7 +179,7 @@ export default function Schedule() {
 
     // Send the updated start, end dates and status to the backend
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/task/updateTasks/${event.id}`, {
+      await axios.put(`http://localhost:4000/task/updateTasks/${event.id}`, {
         status: newStatus,
         startDate: newStartDate.toISOString(),
         dueDate: newEndDate.toISOString(),
@@ -230,10 +231,15 @@ export default function Schedule() {
     console.log("Editing event:", event);
   };
 
+  const handleFocusTime = (event: Event) => {
+    // Logic to edit event (e.g., open a form with pre-filled values)
+    console.log("Focus Time event:", event);
+  };
+
   const handleDeleteEvent = (event: Event) => {
     // Logic to delete event
     axios
-      .delete(`${process.env.REACT_APP_BACKEND_URL}/task/deleteTask/${event.id}`)
+      .delete(`http://localhost:4000/task/deleteTask/${event.id}`)
       .then(() => {
         // Remove event from the state after deletion
         setCalendarEvents(calendarEvents.filter((e) => e.id !== event.id));
@@ -251,7 +257,7 @@ export default function Schedule() {
 
     console.log('Tasks: ', calendarEvents);
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/task/analyze-schedule`, {
+      const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
         calendarEvents,
       });
 
@@ -383,9 +389,17 @@ export default function Schedule() {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
+            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close Icon */}
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+              onClick={() => setShowModal(false)}
+            >
+              <IoClose size={30} />
+            </button>
+
             <div className="text-center mb-8">
               <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Event Details</h2>
               <p className="text-lg text-gray-600">Here are the details of your event.</p>
@@ -426,29 +440,37 @@ export default function Schedule() {
             </div>
 
             <div className="flex justify-between space-x-6 mb-6">
+              {/* Edit Button */}
               <button
-                className="w-full py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition"
+                className="flex items-center justify-center w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg transition transform hover:scale-105"
                 onClick={() => handleEditEvent(modalEvent)}
               >
-                Edit Event
+                <FaEdit className="mr-2" size={20} /> Edit Event
               </button>
+
+              {/* Delete Button */}
               <button
-                className="w-full py-3 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition"
+                className="flex items-center justify-center w-full py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transition transform hover:scale-105"
                 onClick={() => handleDeleteEvent(modalEvent)}
               >
-                Delete Event
+                <FaTrash className="mr-2" size={20} /> Delete Event
               </button>
             </div>
 
-            <button
-              className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
-              onClick={() => setShowModal(false)}
-            >
-              Close
-            </button>
+            {/* Focus Time Button */}
+            <div className="mb-6">
+              <button
+                className="flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg transition transform hover:scale-105"
+                onClick={() => handleFocusTime(modalEvent)}
+              >
+                <FaRegClock className="mr-2" size={20} /> Focus Time
+              </button>
+            </div>
+
           </div>
         </div>
       )}
+
 
       {/* Show Feedback Modal */}
       {FeedbackModal && (
@@ -468,10 +490,10 @@ export default function Schedule() {
             <div className="space-y-6 mb-6">
               {Feedback?.keyIssues.map((issue, index) => {
 
-                
+
                 // Check if the issue title is empty, if it is return null for that iteration
                 if (!issue.title.trim()) return null;
-                
+
                 // Check for specific titles and apply the custom box styling
                 if (issue.title.trim() === '**Warnings:**' || issue.title.trim() === '**Problems:**') {
                   return (
@@ -499,14 +521,14 @@ export default function Schedule() {
                           <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                             {/* Handle bullets */}
                             {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-                            
+
                             {/* Handle numbered list */}
                             {!isNumbered && cleanLine && (
                               <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 {lineIndex + 1}.
                               </span>
                             )}
-                            
+
                             {/* Display clean content */}
                             <span>{cleanLine}</span>
                           </p>
@@ -521,46 +543,6 @@ export default function Schedule() {
                         <FaClipboardList className="text-blue-500 mr-2" />
                         <span className="text-blue-500 mr-2">
                           {issue.title.replace(/\*\*/g, '')}
-                        </span> 
-                      </h3>
-                      {/* Iterate over each line of the content */}
-                      {issue.content.split('\n').map((line, lineIndex) => {
-                        // Clean the line by removing asterisks, stars, etc.
-                        const cleanLine = line
-                          .replace(/\*\*/g, '')  // Remove bold markers (**)
-                          .replace(/\*/g, '')    // Remove italic markers (*)
-                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                          .trim(); // Remove any extra leading/trailing whitespace
-
-                        const isBullet = cleanLine.startsWith('•');
-                        const isNumbered = /^\d+\./.test(cleanLine);
-
-                        return (
-                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
-                            {/* Handle bullets */}
-                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-                            
-                            {/* Handle numbered list */}
-                            {!isNumbered && cleanLine && (
-                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
-                                {lineIndex + 1}.
-                              </span>
-                            )}
-                            
-                            {/* Display clean content */}
-                            <span>{cleanLine}</span>
-                          </p>
-                        );
-                      })}
-                    </div>
-                  );
-                } else if (issue.title.trim() === '**Simple Steps to Fix:**') {
-                  return (
-                    <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                        <FaCheckCircle className="text-green-500 mr-2" />
-                        <span className="text-green-500 mr-2">
-                        {issue.title.replace(/\*\*/g, '')}
                         </span>
                       </h3>
                       {/* Iterate over each line of the content */}
@@ -579,14 +561,54 @@ export default function Schedule() {
                           <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                             {/* Handle bullets */}
                             {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-                            
+
                             {/* Handle numbered list */}
                             {!isNumbered && cleanLine && (
                               <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 {lineIndex + 1}.
                               </span>
                             )}
-                            
+
+                            {/* Display clean content */}
+                            <span>{cleanLine}</span>
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                } else if (issue.title.trim() === '**Simple Steps to Fix:**') {
+                  return (
+                    <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                        <FaCheckCircle className="text-green-500 mr-2" />
+                        <span className="text-green-500 mr-2">
+                          {issue.title.replace(/\*\*/g, '')}
+                        </span>
+                      </h3>
+                      {/* Iterate over each line of the content */}
+                      {issue.content.split('\n').map((line, lineIndex) => {
+                        // Clean the line by removing asterisks, stars, etc.
+                        const cleanLine = line
+                          .replace(/\*\*/g, '')  // Remove bold markers (**)
+                          .replace(/\*/g, '')    // Remove italic markers (*)
+                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                          .trim(); // Remove any extra leading/trailing whitespace
+
+                        const isBullet = cleanLine.startsWith('•');
+                        const isNumbered = /^\d+\./.test(cleanLine);
+
+                        return (
+                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                            {/* Handle bullets */}
+                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+
+                            {/* Handle numbered list */}
+                            {!isNumbered && cleanLine && (
+                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                {lineIndex + 1}.
+                              </span>
+                            )}
+
                             {/* Display clean content */}
                             <span>{cleanLine}</span>
                           </p>
@@ -614,19 +636,19 @@ export default function Schedule() {
 
                           const isBullet = cleanLine.startsWith('•');
                           const isNumbered = /^\d+\./.test(cleanLine);
-                          
+
                           return (
                             <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                               {/* Handle bullets */}
                               {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-                              
+
                               {/* Handle numbered list but only if it doesn't already have numbering */}
                               {!isNumbered && cleanLine && (
                                 <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                   {lineIndex + 1}.
                                 </span>
                               )}
-                              
+
                               {/* Display clean content */}
                               <span>{cleanLine}</span>
                             </p>
