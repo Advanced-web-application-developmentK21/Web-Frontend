@@ -94,7 +94,7 @@ export default function Schedule() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/task/getOptionTasks/${userId}`);
         const fetchedEvents = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
@@ -178,7 +178,7 @@ export default function Schedule() {
 
     // Send the updated start, end dates and status to the backend
     try {
-      await axios.put(`http://localhost:4000/task/updateTasks/${event.id}`, {
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/task/updateTasks/${event.id}`, {
         status: newStatus,
         startDate: newStartDate.toISOString(),
         dueDate: newEndDate.toISOString(),
@@ -233,7 +233,7 @@ export default function Schedule() {
   const handleDeleteEvent = (event: Event) => {
     // Logic to delete event
     axios
-      .delete(`http://localhost:4000/task/deleteTask/${event.id}`)
+      .delete(`${process.env.REACT_APP_BACKEND_URL}/task/deleteTask/${event.id}`)
       .then(() => {
         // Remove event from the state after deletion
         setCalendarEvents(calendarEvents.filter((e) => e.id !== event.id));
@@ -251,7 +251,7 @@ export default function Schedule() {
 
     console.log('Tasks: ', calendarEvents);
     try {
-      const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/task/analyze-schedule`, {
         calendarEvents,
       });
 
