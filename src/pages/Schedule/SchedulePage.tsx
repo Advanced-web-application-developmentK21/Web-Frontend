@@ -40,6 +40,8 @@ export default function Schedule() {
     keyIssues: { title: string; content: string }[];
   } | null>(null);
 
+  const userId = localStorage.getItem("userId");
+
   // Handle feedback parsing and update state
   function parseFeedback(rawText: string) {
     const lines = rawText.split('\n'); // Split the text by newline
@@ -92,7 +94,7 @@ export default function Schedule() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/task/getOptionTasks`);
+        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
         const fetchedEvents = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
@@ -176,7 +178,7 @@ export default function Schedule() {
 
     // Send the updated start, end dates and status to the backend
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/task/updateTasks/${event.id}`, {
+      await axios.put(`http://localhost:4000/task/updateTasks/${event.id}`, {
         status: newStatus,
         startDate: newStartDate.toISOString(),
         dueDate: newEndDate.toISOString(),
@@ -196,8 +198,23 @@ export default function Schedule() {
         updatedEvent.start = new Date(start);
         updatedEvent.end = new Date(end);
       }
-    } catch (error) {
-      console.error("Error updating task status:", error);
+    } catch (error: any) {
+      let errorMessage = "An unknown error occurred.";
+
+      if (error.response) {
+        console.error("Sign up error:", error.response.data);
+        const errorData = error.response.data;
+        errorMessage = errorData.message || errorMessage;
+      } else {
+        console.error("Sign up error:", error.message);
+        errorMessage = error.message;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Sign Up Failed",
+        text: errorMessage,
+      });
     }
   };
 
@@ -216,7 +233,7 @@ export default function Schedule() {
   const handleDeleteEvent = (event: Event) => {
     // Logic to delete event
     axios
-      .delete(`${process.env.REACT_APP_BACKEND_URL}/task/deleteTask/${event.id}`)
+      .delete(`http://localhost:4000/task/deleteTask/${event.id}`)
       .then(() => {
         // Remove event from the state after deletion
         setCalendarEvents(calendarEvents.filter((e) => e.id !== event.id));
@@ -234,7 +251,7 @@ export default function Schedule() {
 
     console.log('Tasks: ', calendarEvents);
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/task/analyze-schedule`, {
+      const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
         calendarEvents,
       });
 

@@ -49,11 +49,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(userToken);
 
     // Store all necessary data in localStorage
-    localStorage.setItem('userId', JSON.stringify(userDataId));
-    localStorage.setItem('userName', JSON.stringify(userDataName));
-    localStorage.setItem('userEmail', JSON.stringify(userEmail));
-    localStorage.setItem('userPassword', JSON.stringify(userPassword));
-    localStorage.setItem('userCreatedAt', JSON.stringify(userCreatedAt));
+    localStorage.setItem('userId', userDataId);
+    localStorage.setItem('userName', userDataName);
+    localStorage.setItem('userEmail', userEmail);
+    localStorage.setItem('userPassword', userPassword);
+    localStorage.setItem('userCreatedAt', userCreatedAt);
     localStorage.setItem('token', userToken);
 };
 

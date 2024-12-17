@@ -12,7 +12,7 @@ const Analytics: React.FC = () => {
     const handleLogout = async (): Promise<void> => {
         try {
             // Send a POST request using axios
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/user/logout/${userId}`, {}, {
+            const response = await axios.post(`http://localhost:4000/user/logout/${userId}`, {}, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
