@@ -20,7 +20,7 @@ const Auth: React.FC = () => {
 
   const handleSignUp = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/user/register`, {
+      const response = await axios.post(`http://localhost:4000/user/register`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -60,7 +60,7 @@ const Auth: React.FC = () => {
 
   const handleSignIn = async () => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/user/login`, {
+      const response = await axios.post(`http://localhost:4000/user/login`, {
         email: formData.email,
         password: formData.password,
       });
@@ -104,7 +104,7 @@ const Auth: React.FC = () => {
 
   const handleGoogleLogin = () => {
     // Redirect the user to the Google OAuth endpoint
-    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/user/auth/google`;
+    window.location.href = `http://localhost:4000/user/auth/google`;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
