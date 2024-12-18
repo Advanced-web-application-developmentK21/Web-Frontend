@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Event } from "../../types/events";
 import {
   Calendar as BigCalendar,
@@ -16,6 +17,7 @@ import axios from "axios";
 import { FaCheckCircle, FaClipboardList, FaEdit, FaExclamationTriangle, FaRegClock, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { IoClose } from "react-icons/io5";
+import { scheduler } from "timers/promises";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -231,9 +233,11 @@ export default function Schedule() {
     console.log("Editing event:", event);
   };
 
+  const navigate = useNavigate();
   const handleFocusTime = (event: Event) => {
     // Logic to edit event (e.g., open a form with pre-filled values)
     console.log("Focus Time event:", event);
+    navigate("/timer", {state: { schedule: event}});
   };
 
   const handleDeleteEvent = (event: Event) => {

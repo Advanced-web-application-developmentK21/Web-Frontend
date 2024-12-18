@@ -72,3 +72,18 @@
   left: calc(8px + var(--sidebar-width-narrow));
   rotate: 180deg; /* rotate-180 */
 }
+
+/* Sidebar styles */
+.sidebar.inactive {
+  pointer-events: none;  /* Disable interactions with the entire sidebar */
+  opacity: 0.5; /* Optional: dim the sidebar to show it is inactive */
+}
+
+.sidebar-nav {
+  pointer-events: none;  /* Disable interactions with the sidebar menu items */
+}
+
+.sidebar-logo, .sidebar-title, .sidebar-nav, .sidebar-toggle {
+  pointer-events: none; /* Make sure no elements inside the sidebar are interactive */
+}
+

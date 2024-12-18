@@ -1,20 +1,62 @@
-import React, { useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import "../../styles/FocusTimer.css";
+import { DndProvider } from "react-dnd";
+import {
+  Calendar as BigCalendar,
+  momentLocalizer,
+  Views,
+} from "react-big-calendar";
+import moment from "moment-timezone";
+import { useLocation } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
+
+
+
+interface Task {
+  id: string;
+  title: string;
+}
 
 function FocusTimer() {
-  const [taskList, setTaskList] = useState<string[]>([
-    "Write report",
-    "Study React",
-    "Prepare presentation",
-    "Exercise",
-  ]); // Placeholder tasks
-  const [task, setTask] = useState<string>("");
-  const [newTask, setNewTask] = useState<string>(""); // For custom task input
+  const [Tasks, setTasks] = useState<Task[]>([]); // Array of tasks
+  const [task, setTask] = useState<string>(""); // Selected task title
   const [duration, setDuration] = useState<number>(25); // Work duration in minutes
   const [breakDuration, setBreakDuration] = useState<number>(5); // Break duration in minutes
   const [timeLeft, setTimeLeft] = useState<number>(0); // Countdown in seconds
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isBreak, setIsBreak] = useState<boolean>(false); // Toggle work/break
+
+  const { setIsTimerRunning } = useAuth();
+
+  const userId = localStorage.getItem("userId");
+  const location = useLocation();
+  const Set_task = location.state?.schedule;
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
+        const fetchedEvents: Task[] = response.data.data.map((task: any) => ({
+          id: task._id, // Match with your API response field names
+          title: task.name,
+        }));
+        setTasks(fetchedEvents);
+
+        // Check if Set_task exists in the fetched tasks and set it as the default task
+        if (Set_task) {
+          const matchingTask = fetchedEvents.find((t) => t.title === Set_task.title);
+          console.log("Task already set!", matchingTask);
+          if (matchingTask) {
+            setTask(matchingTask.title);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, [userId, Set_task]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
@@ -44,68 +86,50 @@ function FocusTimer() {
   }, [isRunning, timeLeft, isBreak, duration, breakDuration]);
 
   const startTimer = () => {
-    const finalTask = newTask.trim() || task; // Use newTask if provided, else selected task
+    const finalTask = task; // Use newTask if provided, else selected task
     if (!finalTask) {
-      alert("Please select or enter a task!");
+      alert("Please select a task!");
       return;
-    }
-    if (newTask.trim() && !taskList.includes(newTask.trim())) {
-      setTaskList((prev) => [...prev, newTask.trim()]); // Add new task to the list
     }
     setTask(finalTask);
     setTimeLeft(duration * 60); // Convert minutes to seconds
     setIsRunning(true);
     setIsBreak(false);
-  };
-
-  const saveTask = () => {
-    const trimmedTask = newTask.trim();
-    if (trimmedTask && !taskList.includes(trimmedTask)) {
-      setTaskList((prev) => [...prev, trimmedTask]); // Add new task to the list
-      setNewTask(""); // Clear the input field after saving
-    }
+    setIsTimerRunning(true); 
   };
 
   const stopTimer = () => {
     setIsRunning(false);
+    setIsTimerRunning(false);
   };
 
   const resetTimer = () => {
     setIsRunning(false);
     setTimeLeft(0);
     setIsBreak(false);
+    setIsTimerRunning(false);
   };
+
+  // Cleanup when the session ends
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning) {
+      setIsRunning(false);
+      setIsTimerRunning(false); // Notify that the timer has stopped
+    }
+  }, [timeLeft, isRunning]);
 
   return (
     <div className="focus-timer-container">
       <h1>FOCUS TIMER WITH POMODORO</h1>
       <div className="task-controls">
-        <select
-          value={task}
-          onChange={(e) => setTask(e.target.value)}
-        >
+        <select value={task} onChange={(e) => setTask(e.target.value)}>
           <option value="">Select an Existing Task</option>
-          {taskList.map((t, index) => (
-            <option key={index} value={t}>
-              {t}
+          {Tasks.map((t) => (
+            <option key={t.id} value={t.title}>
+              {t.title}
             </option>
           ))}
         </select>
-        <div className="row">
-          <input
-            type="text"
-            placeholder="Or enter a new task"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-          />
-          <button
-            className="save-button"
-            onClick={saveTask}
-            disabled={!newTask.trim()} // Disable button if input is empty
-          >
-            Save
-          </button>
-        </div>
         <div className="row">
           <label>
           Work Duration (minutes)
@@ -140,7 +164,7 @@ function FocusTimer() {
         </div>
         <button className="reset-button" onClick={resetTimer}>Reset</button>
       </div>
-      <h2>{task || newTask || "No task selected"}</h2>
+      <h2>{task || "No task selected"}</h2>
       <h3>
         {isBreak ? "Break Time" : "Work Time"} -{" "}
         {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
