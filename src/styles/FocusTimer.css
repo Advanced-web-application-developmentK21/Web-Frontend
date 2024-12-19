@@ -51,7 +51,7 @@
 
   .focus-timer-container .row {
     width: 100%;
-    max-width: 500px;
+    max-width: 800px;
     display: flex;
     gap: 10px;
   }

@@ -9,6 +9,7 @@ import {
 import moment from "moment-timezone";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 
 
@@ -21,6 +22,8 @@ interface Task {
 function FocusTimer() {
   const [Tasks, setTasks] = useState<Task[]>([]); // Array of tasks
   const [task, setTask] = useState<string>(""); // Selected task title
+  const [session, setSession] = useState<number>(1); // Number of Session
+  const [curSession, setCurSession] = useState<number>(1); // Current session
   const [duration, setDuration] = useState<number>(25); // Work duration in minutes
   const [breakDuration, setBreakDuration] = useState<number>(5); // Break duration in minutes
   const [timeLeft, setTimeLeft] = useState<number>(0); // Countdown in seconds
@@ -67,18 +70,47 @@ function FocusTimer() {
       }, 1000);
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false); // Pause timer temporarily
+      
       const nextPhase = isBreak ? "work session" : "break";
-      alert(`Session completed! Starting ${nextPhase}.`);
-      if (!isBreak) {
+      if (!isBreak && curSession < session) {
+        Swal.fire({
+          icon: "success", // Use "success" instead of "check-circle"
+          title: `Session ${curSession} Completed!`,
+          html: `Starting <b>${nextPhase}</b>.`,
+          confirmButtonText: "Got it!",
+        });
+
         // Switch to break session
         setTimeLeft(breakDuration * 60);
         setIsBreak(true);
         setIsRunning(true); // Restart timer
-      } else {
+      } else if (curSession < session) {
+        setCurSession(curSession + 1);
+        Swal.fire({
+          icon: "success", // More suitable icon for break ending
+          title: "Break Time is Over!",
+          html: `Starting session <b>${curSession + 1}</b>.`,
+          confirmButtonText: "Let's go!",
+        });
+
         // Switch to work session
         setTimeLeft(duration * 60);
         setIsBreak(false);
         setIsRunning(true); // Restart timer
+      } else {
+        Swal.fire({
+          icon: "success", // Celebration icon for task completion
+          title: "All Sessions Completed!",
+          html: `All sessions are done. Task <b>${task}</b> is now completed!`,
+          showCancelButton: true,
+          confirmButtonText: "Mark as Completed",
+          cancelButtonText: "Close",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Logic for marking the task as completed
+            console.log(`Task "${task}" marked as completed.`);
+          }
+        });
       }
     }
 
@@ -88,9 +120,15 @@ function FocusTimer() {
   const startTimer = () => {
     const finalTask = task; // Use newTask if provided, else selected task
     if (!finalTask) {
-      alert("Please select a task!");
+      Swal.fire({
+        icon: "warning", // More suitable icon for break ending
+        title: "NO TASK!",
+        html: "Please select a task!",
+        confirmButtonText: "OK",
+      });
       return;
     }
+    setCurSession(1);
     setTask(finalTask);
     setTimeLeft(duration * 60); // Convert minutes to seconds
     setIsRunning(true);
@@ -113,8 +151,8 @@ function FocusTimer() {
   // Cleanup when the session ends
   useEffect(() => {
     if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      setIsTimerRunning(false); // Notify that the timer has stopped
+      //setIsRunning(false);
+      //setIsTimerRunning(false); // Notify that the timer has stopped
     }
   }, [timeLeft, isRunning]);
 
@@ -122,7 +160,7 @@ function FocusTimer() {
     <div className="focus-timer-container">
       <h1>FOCUS TIMER WITH POMODORO</h1>
       <div className="task-controls">
-        <select value={task} onChange={(e) => setTask(e.target.value)}>
+        <select value={task} onChange={(e) => setTask(e.target.value)} disabled={isRunning}>
           <option value="">Select an Existing Task</option>
           {Tasks.map((t) => (
             <option key={t.id} value={t.title}>
@@ -131,8 +169,30 @@ function FocusTimer() {
           ))}
         </select>
         <div className="row">
+            <label>
+              Number Of Session:
+            </label>
+            <input
+              type="number"
+              placeholder="Number Of Session"
+              value={session}
+              onInput={(e) => {
+                const value = e.currentTarget.value;
+                // Allow only integers
+                if (/^\d+$/.test(value)) {
+                  setSession(Number(value));
+                } else {
+                  e.currentTarget.value = session.toString(); // Revert to the last valid value
+                }
+              }}
+              min="1"
+              step="1"
+              disabled={isRunning}
+            />
+        </div>
+        <div className="row">
           <label>
-          Work Duration (minutes)
+          Session Duration (minutes):
           </label>
           <input
             type="number"
@@ -140,11 +200,12 @@ function FocusTimer() {
             value={duration}
             onChange={(e) => setDuration(Number(e.target.value))}
             min="1"
+            disabled={isRunning}
           />
         </div>
         <div className="row">
           <label>
-          Break Duration (minutes)
+          Break Duration (minutes):
           </label>
           <input
             type="number"
@@ -152,6 +213,7 @@ function FocusTimer() {
             value={breakDuration}
             onChange={(e) => setBreakDuration(Number(e.target.value))}
             min="1"
+            disabled={isRunning}
           />
         </div>
         <div className="row" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
