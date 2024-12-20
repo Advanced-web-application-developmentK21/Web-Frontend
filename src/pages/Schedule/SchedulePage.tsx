@@ -17,7 +17,6 @@ import axios from "axios";
 import { FaCheckCircle, FaClipboardList, FaEdit, FaExclamationTriangle, FaRegClock, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { IoClose } from "react-icons/io5";
-import { scheduler } from "timers/promises";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -35,7 +34,7 @@ export default function Schedule() {
   const [showMoreEvents, setShowMoreEvents] = useState<Event[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [analyze_loading, setAnalyzeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [FeedbackModal, setFeedbackModal] = useState(false);
@@ -126,7 +125,7 @@ export default function Schedule() {
     };
 
     fetchEvents();
-  }, []);
+  }, [userId]);
 
   const handleShowMore = (events: Event[]) => {
     setShowMoreEvents(events); // Store the events to show in the "Show More" modal
@@ -259,7 +258,7 @@ export default function Schedule() {
     setError(null);
     setFeedback(null);
 
-    console.log('Tasks: ', calendarEvents);
+    console.log(error)
     try {
       const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
         calendarEvents,
@@ -474,7 +473,6 @@ export default function Schedule() {
           </div>
         </div>
       )}
-
 
       {/* Show Feedback Modal */}
       {FeedbackModal && (
