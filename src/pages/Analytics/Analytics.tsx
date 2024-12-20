@@ -1,128 +1,174 @@
-import React, { useState } from "react";
-import { FaSignOutAlt, FaUser } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+"use client";
 
-const Analytics: React.FC = () => {
-    const { userId, userName, logout } = useAuth();
-    const navigate = useNavigate();
-    const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+import { useState } from "react";
+import { FaChartPie, FaTasks, FaClock, FaSyncAlt } from "react-icons/fa";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    ArcElement,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import Loading from "../../components/loading";
 
-    const handleLogout = async (): Promise<void> => {
-        try {
-            // Send a POST request using axios
-            const response = await axios.post(`http://localhost:4000/user/logout/${userId}`, {}, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-    
-            if (response.status === 200) { // Check if the response status is 200 (success)
-                logout();
-                setIsDropdownOpen(false); // Close the dropdown after logout
-                navigate("/auth"); // Redirect to login page
-            } else {
-                console.error("Logout failed");
-            }
-        } catch (error) {
-            console.error("Error during logout:", error);
-        }
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    ArcElement,
+    Tooltip,
+    Legend
+);
+
+const AnalyticsPage = () => {
+    const [loading, setLoading] = useState(false);
+    const [aiFeedbackData, setAiFeedbackData] = useState([
+        "You're excelling in focusing on high-priority tasks. Great job!",
+        "Consider balancing time across tasks to avoid backlogs.",
+        "Try to spend more time on pending tasks for better progress."
+    ]);
+
+    const dailyData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [
+            {
+                label: 'Time Spent (hours)',
+                data: [1, 2.5, 3, 4, 3.5, 2, 1.5],
+                backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                borderRadius: 5,
+            },
+        ],
     };
-    
-    // const handleProfile = (): void => {
-    //     navigate("/profile"); // Navigate to the profile page
-    //     setIsDropdownOpen(false); // Close the dropdown when navigating to profile
-    // };
 
-    const toggleDropdown = (): void => {
-        setIsDropdownOpen(!isDropdownOpen);
+    const taskStatusData = {
+        labels: ['Completed', 'Pending', 'In Progress'],
+        datasets: [
+            {
+                data: [12, 8, 5],
+                backgroundColor: ['#10B981', '#F59E0B', '#3B82F6'],
+                hoverOffset: 10,
+            },
+        ],
+    };
+
+    const handleRefresh = async () => {
+        setLoading(true);
+
+        // Simulate API call or data fetching
+        setTimeout(() => {
+            setAiFeedbackData([
+                "You're performing better with task prioritization. Keep it up!",
+                "Ensure consistent task completion to avoid delays.",
+                "Spend additional time on pending tasks to avoid backlog."
+            ]);
+            setLoading(false);
+        }, 2000); // Simulated delay
     };
 
     return (
-        <div
-            className="flex flex-col items-center justify-center min-h-screen p-4 relative"
-            style={{
-                background: "linear-gradient(to bottom right, #4a90e2, #50c9c3, #3a7bd5)",
-            }}
-        >
-            {/* Avatar with Dropdown */}
-            <div className="absolute top-4 right-4">
-                <div className="relative">
+        <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-8">
+            {/* Header */}
+            <div className="mb-8 text-center">
+                <h1 className="text-5xl font-extrabold text-gray-800">Analytics Dashboard</h1>
+                <p className="text-lg text-gray-600 mt-2">Track your focus sessions and monitor your progress.</p>
+            </div>
+
+            {/* Metrics Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow">
+                    <FaClock className="text-indigo-500 text-4xl mr-4" />
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Total Time Spent</h2>
+                        <p className="text-gray-600 text-lg">12h / 20h</p>
+                    </div>
+                </div>
+
+                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow">
+                    <FaChartPie className="text-green-500 text-4xl mr-4" />
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Estimated Time</h2>
+                        <p className="text-gray-600 text-lg">60%</p>
+                    </div>
+                </div>
+
+                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow">
+                    <FaTasks className="text-yellow-500 text-4xl mr-4" />
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Task Breakdown</h2>
+                        <p className="text-gray-600 text-lg">25 Tasks</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6">Daily Time Spent</h3>
+                    <Bar data={dailyData} />
+                </div>
+
+                <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-12">Task Status Breakdown</h3>
+                    <div className="flex justify-center">
+                        <Doughnut
+                            data={taskStatusData}
+                            options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            font: {
+                                                size: 14,
+                                            },
+                                        },
+                                    },
+                                },
+                            }}
+                            width={200}
+                            height={200}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* AI Feedback Section */}
+            <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-bold text-gray-800">AI Feedback</h3>
                     <button
-                        onClick={toggleDropdown}
-                        className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-white font-bold text-lg hover:scale-110 transition-transform"
-                        aria-label="Profile"
+                        onClick={handleRefresh}
+                        className="flex items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
                     >
-                        {userId ? (
-                            <FaUser className="text-xl" />
-                        ) : (
-                            <span className="text-xl">{userName ? userName[0].toUpperCase() : "G"}</span>
-                        )}
+                        <FaSyncAlt className="mr-2 text-white" /> {/* Refresh Icon */}
+                        Refresh
                     </button>
-
-                    {/* Dropdown Menu */}
-                    {isDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg">
-                            <button
-                                //onClick={handleProfile}
-                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                                <FaUser className="mr-2" /> Profile
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                            >
-                                <FaSignOutAlt className="mr-2" /> Logout
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <h1 className="text-4xl font-bold text-center text-white">
-                Welcome,{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-700 via-red-800 to-red-900">
-                    {userId ? userName : "Guest"}
-                </span>
-                !
-            </h1>
-
-            <div className="text-center space-y-2 text-white mt-6">
-                <h2 className="text-2xl font-semibold">FINAL PROJECT</h2>
-                <p className="text-lg">PROJECT - AI-POWERED STUDY PLANNER</p>
-            </div>
-
-            {/* Always render sensitive information */}
-            <div className="bg-white bg-opacity-90 p-8 rounded-lg shadow-xl max-w-lg w-full space-y-6 mt-8">
-                <h3 className="text-2xl font-semibold text-center text-gray-800">Project Creators</h3>
-
-                <div className="space-y-3">
-                    <p className="text-lg">
-                        <strong className="font-medium text-gray-700">Student ID1:</strong> 21127228 - Nguyễn Gia Bảo
-                    </p>
-                    <p className="text-lg">
-                        <strong className="font-medium text-gray-700">Student ID2:</strong> 21127116 - Nguyễn Lê Thanh Nghĩa
-                    </p>
-                    <p className="text-lg">
-                        <strong className="font-medium text-gray-700">Student ID3:</strong> 21127654 - Nguyễn Đức Nhã
-                    </p>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                    <p className="text-lg">
-                        <strong className="font-medium text-gray-700">Class:</strong> 21KTPM2 | University of Science, VNU-HCM
-                    </p>
-                    <p className="text-lg">
-                        <strong className="font-medium text-gray-700">Supervisors:</strong> Nguyễn Huy Khánh (Theory), Mai Anh Tuấn
-                        (Practice), Đỗ Nguyên Kha (Practice), Trần Duy Quang (Practice)
-                    </p>
-                </div>
+                {/* Loading State */}
+                {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <Loading />
+                    </div>
+                ) : (
+                    <ul className="space-y-6">
+                        {aiFeedbackData.map((feedback, index) => (
+                            <li key={index} className="flex items-start">
+                                <FaChartPie className="text-green-500 text-3xl mr-4" />
+                                <p className="text-lg">{feedback}</p>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
+
 
         </div>
     );
 };
 
-export default Analytics;
+export default AnalyticsPage;
