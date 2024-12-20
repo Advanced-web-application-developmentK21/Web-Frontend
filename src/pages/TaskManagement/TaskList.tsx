@@ -54,7 +54,7 @@ const TaskList: React.FC = () => {
     fetchTasks();
 
     return () => clearTimeout(timer);
-  }, [search, priorityFilter, statusFilter, sortBy]);
+  }, [search, priorityFilter, statusFilter, sortBy, userId]);
 
   // Filters tasks by priority and status
   const filteredTasks = tasks.filter((task) => {
@@ -164,6 +164,7 @@ const TaskList: React.FC = () => {
               <option value="todo">Todo</option>
               <option value="in-progress">In Progress</option>
               <option value="completed">Completed</option>
+              <option value="expired">Expired</option>
             </select>
 
             <select
