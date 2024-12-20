@@ -11,16 +11,13 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
+import { Event } from "../../types/events";
 
 
-
-interface Task {
-  id: string;
-  title: string;
-}
 
 function FocusTimer() {
-  const [Tasks, setTasks] = useState<Task[]>([]); // Array of tasks
+  const [Tasks, setTasks] = useState<Event[]>([]); // Array of tasks
+  const [Cur_Task, setCur_Task] = useState<Event | null>(null);
   const [task, setTask] = useState<string>(""); // Selected task title
   const [session, setSession] = useState<number>(1); // Number of Session
   const [curSession, setCurSession] = useState<number>(1); // Current session
@@ -39,10 +36,27 @@ function FocusTimer() {
     const fetchEvents = async () => {
       try {
         const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
-        const fetchedEvents: Task[] = response.data.data.map((task: any) => ({
-          id: task._id, // Match with your API response field names
-          title: task.name,
-        }));
+        const fetchedEvents: Event[] = response.data.data.map((task: any) => {
+          const startDate = moment.utc(task.startDate).local().toDate();
+          const endDate = moment.utc(task.dueDate).local().toDate();
+        
+          if (task.allDay) {
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+          }
+        
+          return {
+            id: task._id,
+            title: task.name,
+            desc: task.description,
+            priority: task.priority,
+            estimatedTime: task.estimatedTime,
+            status: task.status,
+            start: startDate,
+            end: endDate,
+            allDay: task.allDay || false,
+          };
+        });
         setTasks(fetchedEvents);
 
         // Check if Set_task exists in the fetched tasks and set it as the default task
@@ -51,6 +65,7 @@ function FocusTimer() {
           console.log("Task already set!", matchingTask);
           if (matchingTask) {
             setTask(matchingTask.title);
+            setCur_Task(Set_task);
           }
         }
       } catch (error) {
@@ -98,6 +113,10 @@ function FocusTimer() {
         setIsBreak(false);
         setIsRunning(true); // Restart timer
       } else {
+        setIsRunning(false);
+        setTimeLeft(0);
+        setIsBreak(false);
+        setIsTimerRunning(false);
         Swal.fire({
           icon: "success", // Celebration icon for task completion
           title: "All Sessions Completed!",
@@ -109,6 +128,9 @@ function FocusTimer() {
           if (result.isConfirmed) {
             // Logic for marking the task as completed
             console.log(`Task "${task}" marked as completed.`);
+            UpdateTask();
+            setTask("");
+            setCur_Task(null);
           }
         });
       }
@@ -156,11 +178,79 @@ function FocusTimer() {
     }
   }, [timeLeft, isRunning]);
 
+  const UpdateTask = async () => {
+    if (!Cur_Task) {
+      console.error("Cur_Task is null or undefined.");
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "No task selected to update.",
+      });
+      return;
+    }
+    const newEndDate = new Date(Date.now() - 1000); // Subtract 1000 ms (1 second)
+
+    try {
+      await axios.put(`http://localhost:4000/task/updateTasks/${Cur_Task.id}`, {
+        status: "Completed",
+        startDate: Cur_Task.start,
+        dueDate: newEndDate.toISOString(),
+      });
+  
+      // Optionally, update the local event's status and dates
+      const updatedEvent = Tasks.find((e) => e.id === Cur_Task.id);
+      if (updatedEvent) {
+        updatedEvent.status = "Completed";
+      }
+    } catch (error: any) {
+      let errorMessage = "An unknown error occurred.";
+  
+      if (error.response) {
+        console.error("Update error:", error.response.data);
+        const errorData = error.response.data;
+        errorMessage = errorData.message || errorMessage;
+      } else {
+        console.error("Update error:", error.message);
+        errorMessage = error.message;
+      }
+  
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: errorMessage,
+      });
+    }
+  };
+
   return (
     <div className="focus-timer-container">
-      <h1>FOCUS TIMER WITH POMODORO</h1>
+      <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
+        ⏱️{" "}
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-green to-blue-600">
+          FOCUS TIMER
+        </span>
+      </h1>
       <div className="task-controls">
-        <select value={task} onChange={(e) => setTask(e.target.value)} disabled={isRunning}>
+        <select 
+          value={task} 
+          onChange={(e) => {
+            const selectedTask = Tasks.find((t) => t.title === e.target.value); // Use find with a predicate
+            console.log("Selected task's info: ", selectedTask);
+
+            if (selectedTask && selectedTask.status === "In Progress") {
+              setTask(e.target.value);
+              setCur_Task(selectedTask);
+            } else {
+              Swal.fire({
+                icon: "warning", // More suitable icon for break ending
+                title: "Task status is invalid!",
+                html: "Please change the task status to <b>In Progress</b> first!",
+                confirmButtonText: "OK",
+              });
+            }
+          }} 
+          disabled={isRunning}
+        >
           <option value="">Select an Existing Task</option>
           {Tasks.map((t) => (
             <option key={t.id} value={t.title}>
@@ -226,7 +316,33 @@ function FocusTimer() {
         </div>
         <button className="reset-button" onClick={resetTimer}>Reset</button>
       </div>
-      <h2>{task || "No task selected"}</h2>
+      <h1>{task || "No task selected"}</h1>
+      <h2>
+        {Cur_Task?.start
+          ? `From ${new Date(Cur_Task.start).toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: '2-digit',
+              day: '2-digit',
+              year: 'numeric',
+            })} ${new Date(Cur_Task.start).toLocaleTimeString('en-US', {
+              hour12: false,
+            })}`
+          : ""}
+      </h2>
+
+      <h2>
+        {Cur_Task?.end 
+          ? `To ${new Date(Cur_Task.end).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+          })} ${new Date(Cur_Task.end).toLocaleTimeString('en-US', {
+            hour12: false,
+          })}`
+        : ""}
+      </h2>
+
       <h3>
         {isBreak ? "Break Time" : "Work Time"} -{" "}
         {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}

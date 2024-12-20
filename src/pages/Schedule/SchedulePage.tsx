@@ -237,7 +237,17 @@ export default function Schedule() {
   const handleFocusTime = (event: Event) => {
     // Logic to edit event (e.g., open a form with pre-filled values)
     console.log("Focus Time event:", event);
-    navigate("/timer", {state: { schedule: event}});
+    
+    if (event.status === "In Progress") {
+      navigate("/timer", {state: { schedule: event}});
+    } else {
+      Swal.fire({
+        icon: "warning", // More suitable icon for break ending
+        title: "Task status is invalid!",
+        html: "Please change the task status to <b>In Progress</b> first!",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   const handleDeleteEvent = (event: Event) => {
