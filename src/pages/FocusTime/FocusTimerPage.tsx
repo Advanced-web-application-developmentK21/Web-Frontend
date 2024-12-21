@@ -79,6 +79,30 @@ function FocusTimer() {
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
 
+    //Check if the task deadline is met before the timer ends, end the timer immediately and notify the user.
+    const currentTime = Date.now();
+    const endTime = Cur_Task?.end ? new Date(Cur_Task.end).getTime() : undefined;
+    if (endTime !== undefined) {
+      const remainingTime = endTime - currentTime;
+      if (remainingTime <= 0) {
+        setIsRunning(false);
+        setTimeLeft(0);
+        setIsBreak(false);
+        setIsTimerRunning(false);
+        
+        Swal.fire({
+          icon: "warning",
+          title: "TIME OUT!",
+          html: "The task deadline has arrived.",
+          confirmButtonText: "OK",
+        });
+        UpdateTask("Expired");
+        setTask("");
+        setCur_Task(null);
+        return () => clearInterval(timer);
+      }
+    }
+
     if (isRunning && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
@@ -128,7 +152,7 @@ function FocusTimer() {
           if (result.isConfirmed) {
             // Logic for marking the task as completed
             console.log(`Task "${task}" marked as completed.`);
-            UpdateTask();
+            UpdateTask("Completed");
             setTask("");
             setCur_Task(null);
           }
@@ -143,7 +167,7 @@ function FocusTimer() {
     const finalTask = task; // Use newTask if provided, else selected task
     if (!finalTask) {
       Swal.fire({
-        icon: "warning", // More suitable icon for break ending
+        icon: "error", // More suitable icon for break ending
         title: "NO TASK!",
         html: "Please select a task!",
         confirmButtonText: "OK",
@@ -178,7 +202,7 @@ function FocusTimer() {
     }
   }, [timeLeft, isRunning]);
 
-  const UpdateTask = async () => {
+  const UpdateTask = async (newStatus: "Completed" | "Todo" | "In Progress" | "Expired") => {
     if (!Cur_Task) {
       console.error("Cur_Task is null or undefined.");
       Swal.fire({
@@ -192,7 +216,7 @@ function FocusTimer() {
 
     try {
       await axios.put(`http://localhost:4000/task/updateTasks/${Cur_Task.id}`, {
-        status: "Completed",
+        status: newStatus,
         startDate: Cur_Task.start,
         dueDate: newEndDate.toISOString(),
       });
@@ -200,7 +224,7 @@ function FocusTimer() {
       // Optionally, update the local event's status and dates
       const updatedEvent = Tasks.find((e) => e.id === Cur_Task.id);
       if (updatedEvent) {
-        updatedEvent.status = "Completed";
+        updatedEvent.status = newStatus;
       }
     } catch (error: any) {
       let errorMessage = "An unknown error occurred.";
@@ -242,7 +266,7 @@ function FocusTimer() {
               setCur_Task(selectedTask);
             } else {
               Swal.fire({
-                icon: "warning", // More suitable icon for break ending
+                icon: "error", // More suitable icon for break ending
                 title: "Task status is invalid!",
                 html: "Please change the task status to <b>In Progress</b> first!",
                 confirmButtonText: "OK",
