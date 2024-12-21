@@ -106,7 +106,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
     console.log(formattedData);
   
     try {
-      const response = await axios.post(`http://localhost:4000/task/createTasks/${userId}`, formattedData);
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/task/createTasks/${userId}`, formattedData);
       Swal.fire({
         icon: "success",
         title: "Success",
