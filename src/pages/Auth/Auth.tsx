@@ -79,13 +79,6 @@ const Auth: React.FC = () => {
           showConfirmButton: false,
         });
 
-        setFormData({
-          username: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-
         navigate("/");
       }
 
@@ -128,21 +121,12 @@ const Auth: React.FC = () => {
       !formData.password ||
       (isSignUp && !formData.confirmPassword)
     ) {
-      Swal.fire({
-        icon: "error",
-        title: "Sign Up Failed",
-        text: "Please fill all the required fields",
-      });
-
+      alert("Please fill all the required fields");
       return;
     }
     if (formData.email)
       if (isSignUp && formData.password !== formData.confirmPassword) {
-        Swal.fire({
-          icon: "error",
-          title: "Sign Up Failed",
-          text: "Passwords do not match",
-        });
+        alert("Passwords do not match");
         return;
       }
 

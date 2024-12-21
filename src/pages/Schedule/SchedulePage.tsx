@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Event } from "../../types/events";
 import {
   Calendar as BigCalendar,
@@ -14,9 +13,8 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import axios from "axios";
-import { FaCheckCircle, FaClipboardList, FaEdit, FaExclamationTriangle, FaRegClock, FaTrash } from "react-icons/fa";
+import { FaCheckCircle, FaClipboardList, FaExclamationTriangle } from "react-icons/fa";
 import Swal from "sweetalert2";
-import { IoClose } from "react-icons/io5";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -34,7 +32,7 @@ export default function Schedule() {
   const [showMoreEvents, setShowMoreEvents] = useState<Event[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState<Event[]>([]);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [analyze_loading, setAnalyzeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [FeedbackModal, setFeedbackModal] = useState(false);
@@ -125,7 +123,7 @@ export default function Schedule() {
     };
 
     fetchEvents();
-  }, [userId]);
+  }, []);
 
   const handleShowMore = (events: Event[]) => {
     setShowMoreEvents(events); // Store the events to show in the "Show More" modal
@@ -232,23 +230,6 @@ export default function Schedule() {
     console.log("Editing event:", event);
   };
 
-  const navigate = useNavigate();
-  const handleFocusTime = (event: Event) => {
-    // Logic to edit event (e.g., open a form with pre-filled values)
-    console.log("Focus Time event:", event);
-    
-    if (event.status === "In Progress") {
-      navigate("/timer", {state: { schedule: event}});
-    } else {
-      Swal.fire({
-        icon: "warning", // More suitable icon for break ending
-        title: "Task status is invalid!",
-        html: "Please change the task status to <b>In Progress</b> first!",
-        confirmButtonText: "OK",
-      });
-    }
-  };
-
   const handleDeleteEvent = (event: Event) => {
     // Logic to delete event
     axios
@@ -268,7 +249,7 @@ export default function Schedule() {
     setError(null);
     setFeedback(null);
 
-    console.log(error)
+    console.log('Tasks: ', calendarEvents);
     try {
       const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
         calendarEvents,
@@ -402,17 +383,9 @@ export default function Schedule() {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto relative"
+            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Icon */}
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
-              onClick={() => setShowModal(false)}
-            >
-              <IoClose size={30} />
-            </button>
-
             <div className="text-center mb-8">
               <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Event Details</h2>
               <p className="text-lg text-gray-600">Here are the details of your event.</p>
@@ -453,33 +426,26 @@ export default function Schedule() {
             </div>
 
             <div className="flex justify-between space-x-6 mb-6">
-              {/* Edit Button */}
               <button
-                className="flex items-center justify-center w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg transition transform hover:scale-105"
+                className="w-full py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition"
                 onClick={() => handleEditEvent(modalEvent)}
               >
-                <FaEdit className="mr-2" size={20} /> Edit Event
+                Edit Event
               </button>
-
-              {/* Delete Button */}
               <button
-                className="flex items-center justify-center w-full py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transition transform hover:scale-105"
+                className="w-full py-3 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition"
                 onClick={() => handleDeleteEvent(modalEvent)}
               >
-                <FaTrash className="mr-2" size={20} /> Delete Event
+                Delete Event
               </button>
             </div>
 
-            {/* Focus Time Button */}
-            <div className="mb-6">
-              <button
-                className="flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg transition transform hover:scale-105"
-                onClick={() => handleFocusTime(modalEvent)}
-              >
-                <FaRegClock className="mr-2" size={20} /> Focus Time
-              </button>
-            </div>
-
+            <button
+              className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
+              onClick={() => setShowModal(false)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -502,10 +468,10 @@ export default function Schedule() {
             <div className="space-y-6 mb-6">
               {Feedback?.keyIssues.map((issue, index) => {
 
-
+                
                 // Check if the issue title is empty, if it is return null for that iteration
                 if (!issue.title.trim()) return null;
-
+                
                 // Check for specific titles and apply the custom box styling
                 if (issue.title.trim() === '**Warnings:**' || issue.title.trim() === '**Problems:**') {
                   return (
@@ -533,14 +499,14 @@ export default function Schedule() {
                           <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                             {/* Handle bullets */}
                             {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
+                            
                             {/* Handle numbered list */}
                             {!isNumbered && cleanLine && (
                               <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 {lineIndex + 1}.
                               </span>
                             )}
-
+                            
                             {/* Display clean content */}
                             <span>{cleanLine}</span>
                           </p>
@@ -555,7 +521,7 @@ export default function Schedule() {
                         <FaClipboardList className="text-blue-500 mr-2" />
                         <span className="text-blue-500 mr-2">
                           {issue.title.replace(/\*\*/g, '')}
-                        </span>
+                        </span> 
                       </h3>
                       {/* Iterate over each line of the content */}
                       {issue.content.split('\n').map((line, lineIndex) => {
@@ -573,14 +539,14 @@ export default function Schedule() {
                           <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                             {/* Handle bullets */}
                             {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
+                            
                             {/* Handle numbered list */}
                             {!isNumbered && cleanLine && (
                               <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 {lineIndex + 1}.
                               </span>
                             )}
-
+                            
                             {/* Display clean content */}
                             <span>{cleanLine}</span>
                           </p>
@@ -594,7 +560,7 @@ export default function Schedule() {
                       <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
                         <FaCheckCircle className="text-green-500 mr-2" />
                         <span className="text-green-500 mr-2">
-                          {issue.title.replace(/\*\*/g, '')}
+                        {issue.title.replace(/\*\*/g, '')}
                         </span>
                       </h3>
                       {/* Iterate over each line of the content */}
@@ -613,14 +579,14 @@ export default function Schedule() {
                           <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                             {/* Handle bullets */}
                             {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
+                            
                             {/* Handle numbered list */}
                             {!isNumbered && cleanLine && (
                               <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 {lineIndex + 1}.
                               </span>
                             )}
-
+                            
                             {/* Display clean content */}
                             <span>{cleanLine}</span>
                           </p>
@@ -648,19 +614,19 @@ export default function Schedule() {
 
                           const isBullet = cleanLine.startsWith('•');
                           const isNumbered = /^\d+\./.test(cleanLine);
-
+                          
                           return (
                             <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
                               {/* Handle bullets */}
                               {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
+                              
                               {/* Handle numbered list but only if it doesn't already have numbering */}
                               {!isNumbered && cleanLine && (
                                 <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
                                   {lineIndex + 1}.
                                 </span>
                               )}
-
+                              
                               {/* Display clean content */}
                               <span>{cleanLine}</span>
                             </p>

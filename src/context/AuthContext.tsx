@@ -11,8 +11,6 @@ interface AuthContextType {
   login: (userDataId: string, userDataName: string, userEmail: string, userPassword: string, userCreatedAt: string, userToken: string) => void;
   loadProfileData: (userDataEmail: string, userDataPassword: string, userDataCreatedAt: string) => void;
   logout: () => void;
-  isTimerRunning: boolean;
-  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Create the context with default value of `null` (will be set later by the provider)
@@ -40,8 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [userPassword, setUserPassword] = useState<string | null>(null);
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
-
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   // Login function with necessary user details for authentication
   const login = (userDataId: string, userDataName: string, userEmail: string, userPassword: string, userCreatedAt: string, userToken: string) => {
@@ -97,8 +93,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         logout,
         loadProfileData,
-        isTimerRunning,
-        setIsTimerRunning,
       }}
     >
       {children}

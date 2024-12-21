@@ -9,8 +9,8 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Schedule from './pages/Schedule/SchedulePage';
 import FocusTimer from './pages/FocusTime/FocusTimerPage';
 import TaskManagement from "./pages/TaskManagement/TaskManagement";
+import Analytics from './pages/Analytics/Analytics';
 import ProFilePage from './pages/Profile/ProfilePage';
-import AnalyticsPage from './pages/Analytics/Analytics';
 
 function App() {
   return (
@@ -81,7 +81,7 @@ function App() {
             element={
               <PrivateRoute>
                 <UserLayout>
-                  <AnalyticsPage/>
+                  <Analytics />
                 </UserLayout>
               </PrivateRoute>
             }

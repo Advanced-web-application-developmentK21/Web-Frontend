@@ -5,13 +5,10 @@ import "../styles/Sidebar.css"; // Import CSS file
 import { RiArrowLeftSLine } from "react-icons/ri";
 import { useSideBarToggle } from "../hooks/use-sidebar-toggle";
 import { SideNavItemGroup } from "../types/type";
-import { useAuth } from "../context/AuthContext";
 
-// Sidebar component
 const Sidebar = ({ menuItems }: { menuItems: SideNavItemGroup[] }) => {
   const { toggleCollapse, setToggleCollapse, invokeToggleCollapse } =
     useSideBarToggle();
-  const { isTimerRunning } = useAuth(); // Get `isTimerRunning` from the context
 
   // Auto-collapse sidebar on screens smaller than 1024px
   useEffect(() => {
@@ -35,11 +32,9 @@ const Sidebar = ({ menuItems }: { menuItems: SideNavItemGroup[] }) => {
     invokeToggleCollapse();
   };
 
-  // Apply styles conditionally based on the timer state
   const asideStyle = classNames("sidebar", {
     wide: !toggleCollapse,
     narrow: toggleCollapse,
-    inactive: isTimerRunning, // Add the inactive class when timer is running
   });
 
   const sidebarToggleStyle = classNames("sidebar-toggle", {
