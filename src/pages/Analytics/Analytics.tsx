@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaChartPie, FaTasks, FaClock, FaSyncAlt, FaExchangeAlt } from "react-icons/fa";
+import { FaChartPie, FaTasks, FaClock, FaSyncAlt, FaExchangeAlt, FaRegLightbulb, FaExclamationCircle, FaThumbsUp, FaTrophy, FaExclamationTriangle, FaCheckCircle, FaStar } from "react-icons/fa";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -25,7 +25,6 @@ ChartJS.register(
 
 const AnalyticsPage = () => {
     const userId = localStorage.getItem("userId");
-    const [loading, setLoading] = useState(false);
 
     const [dashboardData, setDashboardData] = useState({
         totalTimeSpent: 0,
@@ -34,11 +33,10 @@ const AnalyticsPage = () => {
         taskCount: 0,
     });
 
-    const [aiFeedbackData, setAiFeedbackData] = useState([
-        "You're excelling in focusing on high-priority tasks. Great job!",
-        "Consider balancing time across tasks to avoid backlogs.",
-        "Try to spend more time on pending tasks for better progress."
-    ]);
+    const [loading, setLoading] = useState(true);
+    const [loadingDaily, setLoadingDaily] = useState(true);
+    const [error, setError] = useState<String>("");
+
     const [selectedMonth, setSelectedMonth] = useState(moment().month() + 1); // Default to current month
     const [selectedYear, setSelectedYear] = useState(moment().year()); // Default to current year
     const [selectedWeek, setSelectedWeek] = useState<number>(1); // Default to week 1
@@ -69,12 +67,66 @@ const AnalyticsPage = () => {
         ],
     });
 
+    const [Feedback, setFeedback] = useState<{
+        keyIssues: { title: string; content: string }[];
+    } | null>(null);
+
+    // Handle feedback parsing and update state
+    function parseFeedback(rawText: string) {
+        const lines = rawText.split('\n'); // Split the text by newline
+        let keyIssues: { title: string; content: string }[] = [];
+        let currentTitle = "";
+        let currentContent: string[] = [];
+        let insideList = false;
+
+        // Iterate through each line
+        lines.forEach(line => {
+            // Check if the line starts with "**" to capture titles
+            const titleMatch = line.match(/^\*\*([^*]+)\*\*/);
+
+            if (titleMatch) {
+                // If we already have content for a previous title, save it
+                if (currentContent.length > 0) {
+                    keyIssues.push({
+                        title: currentTitle.trim(),
+                        content: currentContent.join('\n').trim(),
+                    });
+                }
+
+                // Set the new title and reset the content array
+                currentTitle = titleMatch[1];
+                currentContent = [];
+                insideList = false; // Reset list tracking
+            } else if (line.match(/^\d+\./) || line.match(/^\* /)) {
+                // Check if the line is part of a numbered list or bullet list
+                if (!insideList) {
+                    insideList = true;
+                }
+                currentContent.push(line.trim()); // Add the list item content
+            } else if (line.trim() !== "") {
+                // Add any other regular content
+                currentContent.push(line.trim());
+            }
+        });
+
+        // Push the last title and content if there was any content
+        if (currentContent.length > 0) {
+            keyIssues.push({
+                title: currentTitle.trim(),
+                content: currentContent.join('\n').trim(),
+            });
+        }
+
+        return { keyIssues };
+    }
+
+
     const getStartOfWeek = (week: any, year: any) => {
         return moment().year(year).week(week).startOf('week').format('YYYY-MM-DD');
     };
 
     const fetchData = async (startDate: any) => {
-        setLoading(true);
+        setLoadingDaily(true);
         try {
             const response = await axios.get(
                 `http://localhost:4000/task/daily-time-spent/${userId}?startDate=${startDate}`
@@ -97,7 +149,7 @@ const AnalyticsPage = () => {
         } catch (error) {
             console.error("Error fetching daily time spent data", error);
         } finally {
-            setLoading(false);
+            setLoadingDaily(false);
         }
     };
 
@@ -125,18 +177,26 @@ const AnalyticsPage = () => {
         }
     };
 
+    const fetchAiFeedback = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const response = await axios.post(`http://localhost:4000/task/ai-feedback/${userId}`);
+            const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+            setFeedback(parsedFeedback);
+        } catch (err) {
+            console.error("Error fetching AI feedback:", err);
+            setError("Unable to fetch AI feedback. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleRefresh = async () => {
         setLoading(true);
+        setError("")
 
-        // Simulate API call or data fetching
-        setTimeout(() => {
-            setAiFeedbackData([
-                "You're performing better with task prioritization. Keep it up!",
-                "Ensure consistent task completion to avoid delays.",
-                "Spend additional time on pending tasks to avoid backlog."
-            ]);
-            setLoading(false);
-        }, 2000); // Simulated delay
+        fetchAiFeedback();
     };
 
     const handleDateChange = () => {
@@ -184,6 +244,8 @@ const AnalyticsPage = () => {
         fetchData(defaultStartDate);
 
         fetchTaskStatusData();
+
+        fetchAiFeedback();
     }, [userId]);
 
     useEffect(() => {
@@ -199,6 +261,19 @@ const AnalyticsPage = () => {
 
         fetchDashboardData();
     }, [userId]);
+
+
+    const getIconAndBgColor = (title: string) => {
+        if (title.includes('Areas of Excellence')) {
+            return { icon: <FaTrophy className="text-yellow-400" />, bgColor: 'bg-yellow-50' };
+        } else if (title.includes('Tasks Needing Attention')) {
+            return { icon: <FaExclamationTriangle className="text-red-500" />, bgColor: 'bg-red-50' };
+        } else if (title.includes('Motivational Feedback')) {
+            return { icon: <FaCheckCircle className="text-green-500" />, bgColor: 'bg-green-50' };
+        }
+        return { icon: <FaStar className="text-gray-500" />, bgColor: 'bg-gray-50' }; // default icon
+    };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-8">
@@ -254,7 +329,7 @@ const AnalyticsPage = () => {
                             Change Date
                         </button>
                     </div>
-                    {loading ? (
+                    {loadingDaily ? (
                         <Loading />
                     ) : (
                         <Bar
@@ -328,12 +403,12 @@ const AnalyticsPage = () => {
             {/* AI Feedback Section */}
             <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-800">AI Feedback</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">AI Feedback</h3>
                     <button
                         onClick={handleRefresh}
-                        className="flex items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
+                        className="flex items-center bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition transform duration-300 ease-in-out"
                     >
-                        <FaSyncAlt className="mr-2 text-white" /> {/* Refresh Icon */}
+                        <FaSyncAlt className="mr-2 text-white" />
                         Refresh
                     </button>
                 </div>
@@ -344,16 +419,59 @@ const AnalyticsPage = () => {
                         <Loading />
                     </div>
                 ) : (
-                    <ul className="space-y-6">
-                        {aiFeedbackData.map((feedback, index) => (
-                            <li key={index} className="flex items-start">
-                                <FaChartPie className="text-green-500 text-3xl mr-4" />
-                                <p className="text-lg text-gray-600">{feedback}</p>
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="space-y-8 text-gray-700 text-lg">
+                        {Feedback?.keyIssues.map((issue, index) => {
+                            const { icon, bgColor } = getIconAndBgColor(issue.title);
+
+                            // Remove numbers and the period from the start of the title
+                            const cleanedTitle = issue.title.replace(/^\d+\.\s*/, '');
+
+                            return (
+                                <div key={index} className={`space-y-6 ${bgColor} p-6 rounded-lg shadow-md hover:bg-opacity-80 transition-all`}>
+                                    <div className="flex items-center mb-4">
+                                        {/* Icon for each section */}
+                                        <div className="mr-4 text-2xl">{icon}</div>
+                                        <h3 className="text-2xl font-semibold text-gray-800">{cleanedTitle}</h3>
+                                    </div>
+
+                                    {/* Render content for each section */}
+                                    <div style={{ paddingLeft: '1.5rem', lineHeight: '1.6' }}>
+                                        {issue.content.split('\n').map((line, lineIndex) => {
+                                            const cleanLine = line.replace(/\*\*/g, '').replace(/\*/g, '').trim(); // Clean up line
+                                            const isBullet = cleanLine.startsWith('•');
+                                            const isNumbered = /^\d+\./.test(cleanLine); // Check if the line starts with a number
+                                            let lineWithoutNumber = cleanLine;
+
+                                            // If the line starts with a number, remove the number
+                                            if (isNumbered) {
+                                                lineWithoutNumber = cleanLine.replace(/^\d+\.\s*/, ''); // Remove any number
+                                            }
+
+                                            return (
+                                                <p key={lineIndex} className="mb-3">
+                                                    {/* Don't number the first line of each section */}
+                                                    {lineIndex !== 0 && !isBullet && (
+                                                        <span className="font-bold text-blue-500 mr-2">
+                                                            {lineIndex}. {/* Start numbering from 1 for the rest of the lines */}
+                                                        </span>
+                                                    )}
+
+                                                    {/* Render bullet points */}
+                                                    {isBullet && <span className="font-bold text-blue-500 mr-2">•</span>}
+
+                                                    {/* Render cleaned content without the number */}
+                                                    <span>{lineWithoutNumber}</span>
+                                                </p>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
+
 
             {/* Modal for Date Selection */}
             {showModal && (

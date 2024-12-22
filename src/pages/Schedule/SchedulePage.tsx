@@ -274,6 +274,8 @@ export default function Schedule() {
         calendarEvents,
       });
 
+      console.log(calendarEvents)
+
       console.log('Frontend received data:', response.data);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
       setFeedback(parsedFeedback);
