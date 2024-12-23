@@ -249,6 +249,7 @@ const TaskList: React.FC = () => {
 
       {isModalOpen && selectedTask && (
         <TaskDetails
+          Tasks={tasks}
           task={selectedTask}
           onClose={handleCloseModal}
           onSave={handleSaveTask}

@@ -5,6 +5,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 interface TaskDetailsProps {
+  Tasks?: Task[];
   task: Task;
   onClose: () => void;
   onSave: (updatedTask: Task) => void;
@@ -12,6 +13,7 @@ interface TaskDetailsProps {
 }
 
 const TaskDetails: React.FC<TaskDetailsProps> = ({
+  Tasks,
   task,
   onClose,
   onSave,
@@ -20,6 +22,9 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const [dateError, setDateError] = useState(true);
   const [editedTask, setEditedTask] = useState<Task>({ ...task });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [suggest_loading, setSuggestLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string>('');
+
   
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -154,6 +159,27 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       }
     });
   };  
+
+  const AI_Suggest = async () => {
+    setSuggestLoading(true);
+    //console.log(Tasks);
+
+    try {
+      const response = await axios.post(`http://localhost:4000/task/suggest`, {
+        task, Tasks
+      });
+
+
+      console.log('Frontend received data:', response.data.feedback);
+      //const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+      setFeedback(response.data.feedback);
+      //setFeedbackModal(true);
+    } catch (error) {
+      console.error('Error analyzing schedule:', error);
+    } finally {
+      setSuggestLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -355,6 +381,15 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
         {/* Actions */}
         <div className="flex justify-end space-x-3 mt-6">
+          <button
+            onClick={AI_Suggest}
+            disabled={suggest_loading}
+            className="btn btn-outline px-2 py-2 rounded-md text-blue font-medium"
+            style={{ backgroundColor: "#9ADAACFF" }}
+          >
+            {suggest_loading ? 'Analyzing...' : 'AI suggest'}
+          </button>
+
           <button
             onClick={onClose}
             className="btn btn-outline px-4 py-2 rounded-md text-white font-medium"
