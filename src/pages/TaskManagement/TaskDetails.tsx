@@ -3,6 +3,8 @@ import { Task } from "../../types/type";
 import DatePicker from "react-datepicker";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { Console } from "console";
+import { title } from "process";
 
 interface TaskDetailsProps {
   Tasks?: Task[];
@@ -23,7 +25,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const [editedTask, setEditedTask] = useState<Task>({ ...task });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [suggest_loading, setSuggestLoading] = useState(false);
-  const [feedback, setFeedback] = useState<string>('');
+  const [feedback, setFeedback] = useState<{
+      keyIssues: { title: string; content: string }[];
+    } | null>(null);
+  const [SuggestModal, setSuggestModal] = useState(false);
 
   
   const handleInputChange = (
@@ -36,6 +41,26 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     setErrors({ ...errors, [name]: "" }); // Clear errors on input
   };
 
+
+  function calculateEstimateTime(startDate: string | Date, dueDate: string | Date): string {
+    const start = new Date(startDate);
+    const due = new Date(dueDate);
+  
+    // Calculate the difference in milliseconds
+    const diffMs = due.getTime() - start.getTime();
+  
+    // Convert milliseconds to minutes and hours
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  
+    // Decide whether to show in minutes or hours
+    if (diffMinutes < 60) {
+      return `${diffMinutes} minutes`;
+    } else {
+      return `${diffHours} hours`;
+    }
+  }
+  
   const handleDateChange = (date: Date | null, field: string) => {
     // Ensure that startDate is a valid Date object
     if (editedTask.startDate && date) {
@@ -160,20 +185,63 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     });
   };  
 
+  function parseFeedback (feedbackText: string) {
+    const lines = feedbackText.split("\n").filter(line => line.trim() !== "");
+    const keyIssues = lines.map(line => {
+      const match = line.match(/^\* \*\*(.+?):\*\*/); // Match lines starting with * **Title:**
+      if (match) {
+        return {
+          title: match[1].trim() + ": ",
+          content: line.replace(match[0], "").trim(), // Remove the matched title part
+        };
+      } else {
+        return {
+          title: "",
+          content: line.trim(), // Use the full line as content if no title match
+        };
+      }
+    });
+  
+    return { keyIssues };
+  };
   const AI_Suggest = async () => {
     setSuggestLoading(true);
-    //console.log(Tasks);
+    
+    const priorityMap = {
+      low: "Low",
+      medium: "Medium",
+      high: "High",
+    };
+  
+    const statusMap = {
+      todo: "Todo",
+      inprogress: "In Progress",
+      completed: "Completed",
+      expired: "Expired",
+    };
+    const curTask = {
+      title: editedTask.title,
+      description: editedTask.description,
+      priority: priorityMap[editedTask.priority],
+      estimateTime: editedTask.estimateTime,
+      status: statusMap[editedTask.status],
+      startDate: editedTask.startDate,
+      dueDate: editedTask.dueDate
+    };
+
+    console.log(curTask);
+    //console.log(task);
 
     try {
       const response = await axios.post(`http://localhost:4000/task/suggest`, {
-        task, Tasks
+        curTask, Tasks
       });
 
 
       console.log('Frontend received data:', response.data.feedback);
-      //const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
-      setFeedback(response.data.feedback);
-      //setFeedbackModal(true);
+      const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+      setFeedback(parsedFeedback);
+      setSuggestModal(true);
     } catch (error) {
       console.error('Error analyzing schedule:', error);
     } finally {
@@ -366,7 +434,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               Estimated Time:
             </label>
             <div className="w-fit bg-rose-300 rounded-md pl-4 pr-4">
-              {editedTask.estimateTime}
+              {editedTask.estimateTime} day
             </div>
             {/* <input
               type="number"
@@ -413,6 +481,31 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Show Suggest Modal */}
+      {SuggestModal && (
+        <div className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto">
+          <div className="space-y-6 mb-6">
+            {feedback?.keyIssues.map((issue, index) => {
+              // Check if the issue title is empty, if it is, return null for that iteration
+              //if (!issue.title.trim()) return null;
+          
+              // Return the JSX for non-empty issues
+              return (
+                <div key={index}>
+                  <span style={{ fontWeight: 'bold', fontSize: '1rem', color: '#333' }}>
+                    {issue.title.replace(/\*\*/g, '')}
+                  </span>
+                  <span style={{ fontSize: '1rem', color: '#333' }}>
+                    {issue.content}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      
+      )}
     </div>
   );
 };
