@@ -1,3 +1,4 @@
+import Chatbot from "../components/Chatbot";
 import Header from "../components/header";
 import PageWrapper from "../components/pagewrapper";
 import Sidebar from "../components/sidebar";
@@ -11,6 +12,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                 <Header />
                 <PageWrapper children={children} />
             </div>
+            <Chatbot />
         </>
     )
 }

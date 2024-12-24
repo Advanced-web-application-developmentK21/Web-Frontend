@@ -1,11 +1,7 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
 
 function Dashboard() {
-  const { userId, userName, logout } = useAuth();
-  const navigate = useNavigate();
+  const { userId, userName } = useAuth();
 
   // const handleLogout = async (): Promise<void> => {
   //   try {

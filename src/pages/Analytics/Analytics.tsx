@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaChartPie, FaTasks, FaClock, FaSyncAlt, FaExchangeAlt, FaRegLightbulb, FaExclamationCircle, FaThumbsUp, FaTrophy, FaExclamationTriangle, FaCheckCircle, FaStar } from "react-icons/fa";
+import { FaChartPie, FaTasks, FaClock, FaSyncAlt, FaExchangeAlt, FaTrophy, FaExclamationTriangle, FaCheckCircle, FaStar } from "react-icons/fa";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -127,6 +127,7 @@ const AnalyticsPage = () => {
 
     const fetchData = async (startDate: any) => {
         setLoadingDaily(true);
+        console.log(error)
         try {
             const response = await axios.get(
                 `http://localhost:4000/task/daily-time-spent/${userId}?startDate=${startDate}`
