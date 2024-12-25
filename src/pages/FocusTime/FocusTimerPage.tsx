@@ -7,10 +7,12 @@ import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { Event } from "../../types/events";
 import { FaPlay, FaRedo, FaStop } from "react-icons/fa";
+import { useTheme } from "../../context/ThemeContext";
 
 
 
 function FocusTimer() {
+  const { isDarkMode } = useTheme();
   const [Tasks, setTasks] = useState<Event[]>([]); // Array of tasks
   const [Cur_Task, setCur_Task] = useState<Event | null>(null);
   const [task, setTask] = useState<string>(""); // Selected task title
@@ -242,10 +244,23 @@ function FocusTimer() {
   };
 
   return (
-    <div className="focus-timer-container bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-2xl shadow-xl p-10 mx-auto max-w-4xl mt-12">
-      <h1 className="text-5xl font-extrabold text-center pb-6 text-gray-800">
+    <div
+      className={`focus-timer-container ${isDarkMode
+        ? "bg-gray-900 text-white"
+        : "bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300"
+        } rounded-2xl shadow-xl p-10 mx-auto max-w-4xl mt-12`}
+    >
+      <h1
+        className={`text-5xl font-extrabold text-center pb-6 ${isDarkMode ? "text-white" : "text-gray-800"
+          }`}
+      >
         ⏱️{" "}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-yellow-400 to-blue-600">
+        <span
+          className={`bg-clip-text text-transparent bg-gradient-to-r ${isDarkMode
+            ? "from-purple-700 via-blue-500 to-green-400"
+            : "from-red-500 via-yellow-400 to-blue-600"
+            }`}
+        >
           FOCUS TIMER
         </span>
       </h1>
@@ -255,7 +270,7 @@ function FocusTimer() {
           <tbody>
             {/* Select Task Row */}
             <tr>
-              <td className="text-xl font-semibold text-gray-700">Select Task</td>
+              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Select Task</td>
               <td>
                 <select
                   value={task}
@@ -276,7 +291,10 @@ function FocusTimer() {
                     }
                   }}
                   disabled={isRunning}
-                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                    ? "bg-gray-800 text-gray-300 border-gray-600"
+                    : "bg-white text-gray-900 border-gray-300"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                 >
                   <option value="">Select an Existing Task</option>
                   {Tasks.map((t) => (
@@ -290,7 +308,7 @@ function FocusTimer() {
 
             {/* Number of Sessions Row */}
             <tr>
-              <td className="text-xl font-semibold text-gray-700">Number of Sessions</td>
+              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Number of Sessions</td>
               <td>
                 <input
                   type="number"
@@ -307,14 +325,17 @@ function FocusTimer() {
                   min="1"
                   step="1"
                   disabled={isRunning}
-                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                    ? "bg-gray-800 text-gray-300 border-gray-600"
+                    : "bg-white text-gray-900 border-gray-300"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                 />
               </td>
             </tr>
 
             {/* Session Duration Row */}
             <tr>
-              <td className="text-xl font-semibold text-gray-700">Session Duration (minutes)</td>
+              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Session Duration (minutes)</td>
               <td>
                 <input
                   type="number"
@@ -323,14 +344,17 @@ function FocusTimer() {
                   onChange={(e) => setDuration(Number(e.target.value))}
                   min="1"
                   disabled={isRunning}
-                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                    ? "bg-gray-800 text-gray-300 border-gray-600"
+                    : "bg-white text-gray-900 border-gray-300"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                 />
               </td>
             </tr>
 
             {/* Break Duration Row */}
             <tr>
-              <td className="text-xl font-semibold text-gray-700">Break Duration (minutes)</td>
+              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Break Duration (minutes)</td>
               <td>
                 <input
                   type="number"
@@ -339,7 +363,10 @@ function FocusTimer() {
                   onChange={(e) => setBreakDuration(Number(e.target.value))}
                   min="1"
                   disabled={isRunning}
-                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                    ? "bg-gray-800 text-gray-300 border-gray-600"
+                    : "bg-white text-gray-900 border-gray-300"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                 />
               </td>
             </tr>
@@ -349,26 +376,35 @@ function FocusTimer() {
         {/* Control Buttons */}
         <div className="control-buttons flex justify-center space-x-8 mt-8">
           <button
-            className="px-8 py-3 text-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg hover:from-blue-600 hover:to-blue-800 transition duration-300"
+            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
+              ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
+              : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:from-blue-600 hover:to-blue-800"
+              }`}
             onClick={startTimer}
             disabled={isRunning}
           >
-            <FaPlay className="mr-2 inline text-lg" /> Start
+            <FaPlay className="mr-2 text-xl" /> Start
           </button>
           <button
-            className="px-8 py-3 text-xl bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-600 hover:to-red-800 transition duration-300"
+            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
+              ? "bg-gradient-to-r from-red-600 to-red-800 text-white hover:from-red-700 hover:to-red-900"
+              : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
+              }`}
             onClick={stopTimer}
             disabled={!isRunning}
           >
-            <FaStop className="mr-2 inline text-lg" /> Start
+            <FaStop className="mr-2 text-xl" /> Stop
           </button>
         </div>
+
 
         {/* Reset Button */}
         <div className="text-center mt-4">
           <button
-            className="px-8 py-3 text-xl bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-300"
-            onClick={resetTimer}
+            className={`px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
+              ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+              : "bg-gray-300 text-gray-800 hover:bg-gray-400"
+              }`} onClick={resetTimer}
           >
             <FaRedo className="mr-2 inline text-lg" /> Reset
           </button>
@@ -376,9 +412,14 @@ function FocusTimer() {
       </div>
 
       {/* Task Information */}
-      <div className="task-info mt-12 text-center">
-        <h2 className="text-2xl font-semibold text-gray-800">{task || "No task selected"}</h2>
-        <h3 className="text-lg text-gray-600 mt-2">
+      <div
+        className={`task-info mt-12 text-center ${isDarkMode ? "text-emerald-800" : "text-slate-900"
+          }`}
+      >
+        <h2 className={`text-2xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
+          {task || "No task selected"}
+        </h2>
+        <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
           {Cur_Task?.start
             ? `From ${new Date(Cur_Task.start).toLocaleDateString("en-US", {
               weekday: "short",
@@ -391,7 +432,7 @@ function FocusTimer() {
             : ""}
         </h3>
 
-        <h3 className="text-lg text-gray-600 mt-2">
+        <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
           {Cur_Task?.end
             ? `To ${new Date(Cur_Task.end).toLocaleDateString("en-US", {
               weekday: "short",
@@ -404,7 +445,7 @@ function FocusTimer() {
             : ""}
         </h3>
 
-        <h4 className="text-xl font-semibold text-gray-800 mt-4">
+        <h4 className={`text-xl font-semibold mt-4 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
           {isBreak ? "Break Time" : "Work Time"} -{" "}
           {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </h4>
@@ -412,7 +453,10 @@ function FocusTimer() {
         {isRunning && (
           <div className="timer-bar mt-6">
             <div
-              className="timer-progress bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+              className={`timer-progress rounded-full ${isDarkMode
+                ? "bg-gradient-to-r from-green-500 to-blue-600"
+                : "bg-gradient-to-r from-green-400 to-blue-500"
+                }`}
               style={{
                 width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
                   ((isBreak ? breakDuration : duration) * 60) *
@@ -422,6 +466,7 @@ function FocusTimer() {
           </div>
         )}
       </div>
+
     </div>
 
   );
