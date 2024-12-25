@@ -1,23 +1,22 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import classNames from "classnames";
 import { PiHandWavingThin } from "react-icons/pi";
 import { IoNotificationsOutline } from "react-icons/io5";
-import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaUserCircle, FaSignOutAlt, FaMoon, FaSun } from "react-icons/fa";
 import "../styles/Header.css";
 import { useSideBarToggle } from "../hooks/use-sidebar-toggle";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext"; // Import useTheme hook
 
 const Header: React.FC = () => {
   const { toggleCollapse } = useSideBarToggle();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { logout } = useAuth();
-
+  const { isDarkMode, toggleTheme } = useTheme(); // Use theme context
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const toggleDropdown = () => {
-    setDropdownOpen((prevState) => !prevState);
-  };
+  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
   const handleProfileClick = () => {
     window.location.href = "/profile";
@@ -28,7 +27,6 @@ const Header: React.FC = () => {
     window.location.href = "/auth";
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -57,6 +55,10 @@ const Header: React.FC = () => {
       </div>
 
       <div className="right-items">
+        <div className="theme-toggle" onClick={toggleTheme}>
+          {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
+        </div>
+
         <div className="notification">
           <IoNotificationsOutline size={20} />
         </div>

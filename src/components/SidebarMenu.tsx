@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom"; // React Router imports
 import classNames from "classnames";
 import "../styles/SidebarMenu.css"; // Import CSS file
@@ -16,6 +16,14 @@ const SidebarMenuItem: React.FC<{ item: SideNavItem }> = ({ item }) => { // Type
   const { toggleCollapse } = useSideBarToggle();
   const location = useLocation(); // React Router hook to get current path
   const isActive = location.pathname.includes(item.path); // Determine if the link is active
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    console.log(isDarkMode)
+    setIsDarkMode(savedTheme === "dark");
+  }, []);
 
   return (
     <Link to={item.path} className={getLinkClass(isActive, toggleCollapse)}>
