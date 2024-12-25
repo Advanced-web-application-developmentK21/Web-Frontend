@@ -5,7 +5,7 @@ import { FaRegWindowClose } from "react-icons/fa";
 export default function Chatbot() {
   const userId = localStorage.getItem("userId");
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([{ sender: "bot", text: "Xin chào! Tôi có thể giúp gì cho bạn?" }]);
+  const [messages, setMessages] = useState([{ sender: "bot", text: "Hello! May I help you?" }]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -52,7 +52,7 @@ export default function Chatbot() {
 
   const handleRefresh = () => {
     // Reset trạng thái tin nhắn và nhập liệu
-    setMessages([{ sender: "bot", text: "Xin chào! Tôi có thể giúp gì cho bạn?" }]);
+    setMessages([{ sender: "bot", text: "Hello! May I help you?" }]);
     setInputValue("");
   };
 
@@ -167,7 +167,7 @@ export default function Chatbot() {
             <div className="flex items-center space-x-2">
               <textarea
                 className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nhập tin nhắn..."
+                placeholder="Enter your message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown} // Đảm bảo đúng loại sự kiện
@@ -176,7 +176,7 @@ export default function Chatbot() {
                 onClick={handleSendMessage}
                 className="bg-gradient-to-br from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl hover:scale-105 transition-transform duration-300"
               >
-                Gửi
+                Send
               </button>
             </div>
           </div>

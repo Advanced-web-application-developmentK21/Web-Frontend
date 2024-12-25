@@ -12,6 +12,16 @@ import TaskManagement from "./pages/TaskManagement/TaskManagement";
 import ProFilePage from './pages/Profile/ProfilePage';
 import AnalyticsPage from './pages/Analytics/Analytics';
 
+const protectedRoutes = [
+  { path: "/home", component: <Dashboard /> },
+  { path: "/tasks", component: <TaskManagement /> },
+  { path: "/schedule", component: <Schedule /> },
+  { path: "/timer", component: <FocusTimer /> },
+  { path: "/analytics", component: <AnalyticsPage /> },
+  { path: "/profile", component: <ProFilePage /> },
+  { path: "/help", component: <Dashboard /> }, // Assuming /help is the same as Dashboard
+];
+
 function App() {
   return (
     <AuthProvider>
@@ -24,79 +34,20 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
 
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <ProFilePage />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          
           {/* Protected routes */}
-          <Route
-            path="/home"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <Dashboard />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <TaskManagement />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <Schedule />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/timer"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <FocusTimer />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <AnalyticsPage/>
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
-          
-          <Route
-            path="/help"
-            element={
-              <PrivateRoute>
-                <UserLayout>
-                  <Dashboard />
-                </UserLayout>
-              </PrivateRoute>
-            }
-          />
+          {protectedRoutes.map(({ path, component }) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <PrivateRoute>
+                  <UserLayout>
+                    {component}
+                  </UserLayout>
+                </PrivateRoute>
+              }
+            />
+          ))}
         </Routes>
       </Router>
     </AuthProvider>
