@@ -11,6 +11,7 @@ import FocusTimer from './pages/FocusTime/FocusTimerPage';
 import TaskManagement from "./pages/TaskManagement/TaskManagement";
 import ProFilePage from './pages/Profile/ProfilePage';
 import AnalyticsPage from './pages/Analytics/Analytics';
+import HelpPage from './pages/Help/HelpPage';
 
 const protectedRoutes = [
   { path: "/home", component: <Dashboard /> },
@@ -19,7 +20,7 @@ const protectedRoutes = [
   { path: "/timer", component: <FocusTimer /> },
   { path: "/analytics", component: <AnalyticsPage /> },
   { path: "/profile", component: <ProFilePage /> },
-  { path: "/help", component: <Dashboard /> }, // Assuming /help is the same as Dashboard
+  { path: "/help", component: <HelpPage /> }, // Assuming /help is the same as Dashboard
 ];
 
 function App() {

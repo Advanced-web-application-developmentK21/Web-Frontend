@@ -1,17 +1,12 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/FocusTimer.css";
-import { DndProvider } from "react-dnd";
-import {
-  Calendar as BigCalendar,
-  momentLocalizer,
-  Views,
-} from "react-big-calendar";
 import moment from "moment-timezone";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { Event } from "../../types/events";
+import { FaPlay, FaRedo, FaStop } from "react-icons/fa";
 
 
 
@@ -39,12 +34,12 @@ function FocusTimer() {
         const fetchedEvents: Event[] = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
-        
+
           if (task.allDay) {
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 999);
           }
-        
+
           return {
             id: task._id,
             title: task.name,
@@ -89,7 +84,7 @@ function FocusTimer() {
         setTimeLeft(0);
         setIsBreak(false);
         setIsTimerRunning(false);
-        
+
         Swal.fire({
           icon: "warning",
           title: "TIME OUT!",
@@ -109,7 +104,7 @@ function FocusTimer() {
       }, 1000);
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false); // Pause timer temporarily
-      
+
       const nextPhase = isBreak ? "work session" : "break";
       if (!isBreak && curSession < session) {
         Swal.fire({
@@ -179,7 +174,7 @@ function FocusTimer() {
     setTimeLeft(duration * 60); // Convert minutes to seconds
     setIsRunning(true);
     setIsBreak(false);
-    setIsTimerRunning(true); 
+    setIsTimerRunning(true);
   };
 
   const stopTimer = () => {
@@ -220,7 +215,7 @@ function FocusTimer() {
         startDate: Cur_Task.start,
         dueDate: newEndDate.toISOString(),
       });
-  
+
       // Optionally, update the local event's status and dates
       const updatedEvent = Tasks.find((e) => e.id === Cur_Task.id);
       if (updatedEvent) {
@@ -228,7 +223,7 @@ function FocusTimer() {
       }
     } catch (error: any) {
       let errorMessage = "An unknown error occurred.";
-  
+
       if (error.response) {
         console.error("Update error:", error.response.data);
         const errorData = error.response.data;
@@ -237,7 +232,7 @@ function FocusTimer() {
         console.error("Update error:", error.message);
         errorMessage = error.message;
       }
-  
+
       Swal.fire({
         icon: "error",
         title: "Update Failed",
@@ -247,143 +242,188 @@ function FocusTimer() {
   };
 
   return (
-    <div className="focus-timer-container">
-      <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
+    <div className="focus-timer-container bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 rounded-2xl shadow-xl p-10 mx-auto max-w-4xl mt-12">
+      <h1 className="text-5xl font-extrabold text-center pb-6 text-gray-800">
         ⏱️{" "}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-green to-blue-600">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-yellow-400 to-blue-600">
           FOCUS TIMER
         </span>
       </h1>
-      <div className="task-controls">
-        <select 
-          value={task} 
-          onChange={(e) => {
-            const selectedTask = Tasks.find((t) => t.title === e.target.value); // Use find with a predicate
-            console.log("Selected task's info: ", selectedTask);
 
-            if (selectedTask && selectedTask.status === "In Progress") {
-              setTask(e.target.value);
-              setCur_Task(selectedTask);
-            } else {
-              Swal.fire({
-                icon: "error", // More suitable icon for break ending
-                title: "Task status is invalid!",
-                html: "Please change the task status to <b>In Progress</b> first!",
-                confirmButtonText: "OK",
-              });
-            }
-          }} 
-          disabled={isRunning}
-        >
-          <option value="">Select an Existing Task</option>
-          {Tasks.map((t) => (
-            <option key={t.id} value={t.title}>
-              {t.title}
-            </option>
-          ))}
-        </select>
-        <div className="row">
-            <label>
-              Number Of Session:
-            </label>
-            <input
-              type="number"
-              placeholder="Number Of Session"
-              value={session}
-              onInput={(e) => {
-                const value = e.currentTarget.value;
-                // Allow only integers
-                if (/^\d+$/.test(value)) {
-                  setSession(Number(value));
-                } else {
-                  e.currentTarget.value = session.toString(); // Revert to the last valid value
-                }
-              }}
-              min="1"
-              step="1"
-              disabled={isRunning}
-            />
-        </div>
-        <div className="row">
-          <label>
-          Session Duration (minutes):
-          </label>
-          <input
-            type="number"
-            placeholder="Work Duration (minutes)"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            min="1"
+      <div className="task-controls space-y-8">
+        <table className="w-full">
+          <tbody>
+            {/* Select Task Row */}
+            <tr>
+              <td className="text-xl font-semibold text-gray-700">Select Task</td>
+              <td>
+                <select
+                  value={task}
+                  onChange={(e) => {
+                    const selectedTask = Tasks.find((t) => t.title === e.target.value);
+                    console.log("Selected task's info: ", selectedTask);
+
+                    if (selectedTask && selectedTask.status === "In Progress") {
+                      setTask(e.target.value);
+                      setCur_Task(selectedTask);
+                    } else {
+                      Swal.fire({
+                        icon: "error",
+                        title: "Task status is invalid!",
+                        html: "Please change the task status to <b>In Progress</b> first!",
+                        confirmButtonText: "OK",
+                      });
+                    }
+                  }}
+                  disabled={isRunning}
+                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                >
+                  <option value="">Select an Existing Task</option>
+                  {Tasks.map((t) => (
+                    <option key={t.id} value={t.title}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              </td>
+            </tr>
+
+            {/* Number of Sessions Row */}
+            <tr>
+              <td className="text-xl font-semibold text-gray-700">Number of Sessions</td>
+              <td>
+                <input
+                  type="number"
+                  placeholder="Number of Sessions"
+                  value={session}
+                  onInput={(e) => {
+                    const value = e.currentTarget.value;
+                    if (/^\d+$/.test(value)) {
+                      setSession(Number(value));
+                    } else {
+                      e.currentTarget.value = session.toString();
+                    }
+                  }}
+                  min="1"
+                  step="1"
+                  disabled={isRunning}
+                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                />
+              </td>
+            </tr>
+
+            {/* Session Duration Row */}
+            <tr>
+              <td className="text-xl font-semibold text-gray-700">Session Duration (minutes)</td>
+              <td>
+                <input
+                  type="number"
+                  placeholder="Work Duration"
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  min="1"
+                  disabled={isRunning}
+                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                />
+              </td>
+            </tr>
+
+            {/* Break Duration Row */}
+            <tr>
+              <td className="text-xl font-semibold text-gray-700">Break Duration (minutes)</td>
+              <td>
+                <input
+                  type="number"
+                  placeholder="Break Duration"
+                  value={breakDuration}
+                  onChange={(e) => setBreakDuration(Number(e.target.value))}
+                  min="1"
+                  disabled={isRunning}
+                  className="w-full px-6 py-3 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white transition duration-300"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Control Buttons */}
+        <div className="control-buttons flex justify-center space-x-8 mt-8">
+          <button
+            className="px-8 py-3 text-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg hover:from-blue-600 hover:to-blue-800 transition duration-300"
+            onClick={startTimer}
             disabled={isRunning}
-          />
-        </div>
-        <div className="row">
-          <label>
-          Break Duration (minutes):
-          </label>
-          <input
-            type="number"
-            placeholder="Break Duration (minutes)"
-            value={breakDuration}
-            onChange={(e) => setBreakDuration(Number(e.target.value))}
-            min="1"
-            disabled={isRunning}
-          />
-        </div>
-        <div className="row" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <button className="start-button" onClick={startTimer} disabled={isRunning}>
-            Start
+          >
+            <FaPlay className="mr-2 inline text-lg" /> Start
           </button>
-          <button className="stop-button" onClick={stopTimer} disabled={!isRunning}>
-            Stop
+          <button
+            className="px-8 py-3 text-xl bg-gradient-to-r from-red-500 to-red-700 text-white rounded-lg hover:from-red-600 hover:to-red-800 transition duration-300"
+            onClick={stopTimer}
+            disabled={!isRunning}
+          >
+            <FaStop className="mr-2 inline text-lg" /> Start
           </button>
         </div>
-        <button className="reset-button" onClick={resetTimer}>Reset</button>
+
+        {/* Reset Button */}
+        <div className="text-center mt-4">
+          <button
+            className="px-8 py-3 text-xl bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-300"
+            onClick={resetTimer}
+          >
+            <FaRedo className="mr-2 inline text-lg" /> Reset
+          </button>
+        </div>
       </div>
-      <h1>{task || "No task selected"}</h1>
-      <h2>
-        {Cur_Task?.start
-          ? `From ${new Date(Cur_Task.start).toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric',
-            })} ${new Date(Cur_Task.start).toLocaleTimeString('en-US', {
+
+      {/* Task Information */}
+      <div className="task-info mt-12 text-center">
+        <h2 className="text-2xl font-semibold text-gray-800">{task || "No task selected"}</h2>
+        <h3 className="text-lg text-gray-600 mt-2">
+          {Cur_Task?.start
+            ? `From ${new Date(Cur_Task.start).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            })} ${new Date(Cur_Task.start).toLocaleTimeString("en-US", {
               hour12: false,
             })}`
-          : ""}
-      </h2>
+            : ""}
+        </h3>
 
-      <h2>
-        {Cur_Task?.end 
-          ? `To ${new Date(Cur_Task.end).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-          })} ${new Date(Cur_Task.end).toLocaleTimeString('en-US', {
-            hour12: false,
-          })}`
-        : ""}
-      </h2>
+        <h3 className="text-lg text-gray-600 mt-2">
+          {Cur_Task?.end
+            ? `To ${new Date(Cur_Task.end).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+            })} ${new Date(Cur_Task.end).toLocaleTimeString("en-US", {
+              hour12: false,
+            })}`
+            : ""}
+        </h3>
 
-      <h3>
-        {isBreak ? "Break Time" : "Work Time"} -{" "}
-        {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
-      </h3>
-      {isRunning && (
-        <div className="timer-bar">
-          <div
-            className="timer-progress"
-            style={{
-              width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
-                ((isBreak ? breakDuration : duration) * 60) *
-                100}%`,
-            }}
-          />
-        </div>
-      )}
+        <h4 className="text-xl font-semibold text-gray-800 mt-4">
+          {isBreak ? "Break Time" : "Work Time"} -{" "}
+          {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+        </h4>
+
+        {isRunning && (
+          <div className="timer-bar mt-6">
+            <div
+              className="timer-progress bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
+              style={{
+                width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
+                  ((isBreak ? breakDuration : duration) * 60) *
+                  100}%`,
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
+
   );
 }
 
