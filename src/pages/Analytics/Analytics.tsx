@@ -13,6 +13,7 @@ import {
 import { Bar, Doughnut } from 'react-chartjs-2';
 import Loading from "../../components/loading";
 import moment from "moment";
+import { useTheme } from "../../context/ThemeContext";
 
 ChartJS.register(
     CategoryScale,
@@ -24,6 +25,7 @@ ChartJS.register(
 );
 
 const AnalyticsPage = () => {
+    const { isDarkMode } = useTheme();
     const userId = localStorage.getItem("userId");
 
     const [dashboardData, setDashboardData] = useState({
@@ -263,8 +265,20 @@ const AnalyticsPage = () => {
         fetchDashboardData();
     }, [userId]);
 
-
     const getIconAndBgColor = (title: string) => {
+        // Nếu là chế độ tối, thay đổi màu nền cho các phần
+        if (isDarkMode) {
+            if (title.includes('Areas of Excellence')) {
+                return { icon: <FaTrophy className="text-yellow-400" />, bgColor: 'bg-yellow-800' };
+            } else if (title.includes('Tasks Needing Attention')) {
+                return { icon: <FaExclamationTriangle className="text-red-500" />, bgColor: 'bg-red-800' };
+            } else if (title.includes('Motivational Feedback')) {
+                return { icon: <FaCheckCircle className="text-green-500" />, bgColor: 'bg-green-800' };
+            }
+            return { icon: <FaStar className="text-gray-500" />, bgColor: 'bg-gray-800' }; // default icon for dark mode
+        }
+
+        // Nếu không phải chế độ tối (chế độ sáng)
         if (title.includes('Areas of Excellence')) {
             return { icon: <FaTrophy className="text-yellow-400" />, bgColor: 'bg-yellow-50' };
         } else if (title.includes('Tasks Needing Attention')) {
@@ -275,23 +289,49 @@ const AnalyticsPage = () => {
         return { icon: <FaStar className="text-gray-500" />, bgColor: 'bg-gray-50' }; // default icon
     };
 
-
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-8">
+        <div
+            className={`min-h-screen p-8 ${isDarkMode
+                ? "bg-gradient-to-b from-gray-900 to-gray-800 text-gray-200"
+                : "bg-gradient-to-b from-gray-100 to-gray-200 text-gray-800"
+                }`}
+        >
             {/* Header */}
             <div className="mb-8 text-center">
-                <h1 className="text-5xl font-extrabold text-gray-800">Analytics Dashboard</h1>
-                <p className="text-lg text-gray-600 mt-2">Track your focus sessions and monitor your progress.</p>
+                <h1
+                    className={`text-5xl font-extrabold ${isDarkMode ? "text-gray-100" : "text-gray-800"}`}
+                >
+                    Analytics Dashboard
+                </h1>
+                <p
+                    className={`text-lg mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                >
+                    Track your focus sessions and monitor your progress.
+                </p>
             </div>
 
             {/* Metrics Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow">
-                    <FaClock className="text-indigo-500 text-4xl mr-4" />
+                <div
+                    className={`rounded-lg p-6 flex items-center transition-shadow ${isDarkMode
+                        ? "bg-gray-800 shadow-lg hover:shadow-gray-700"
+                        : "bg-white shadow-lg hover:shadow-xl"
+                        }`}
+                >
+                    <FaClock
+                        className={`text-4xl mr-4 ${isDarkMode ? "text-indigo-300" : "text-indigo-500"
+                            }`}
+                    />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Total Time Spent</h2>
+                        <h2
+                            className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-800"
+                                }`}
+                        >
+                            Total Time Spent
+                        </h2>
                         <p
-                            className="text-gray-600 text-lg"
+                            className={`text-lg ${isDarkMode ? "text-gray-400" : "text-gray-600"
+                                }`}
                             title="Total time spent / Total estimated time"
                         >
                             {dashboardData.totalTimeSpent}h / {dashboardData.totalEstimatedTime}h
@@ -299,32 +339,82 @@ const AnalyticsPage = () => {
                     </div>
                 </div>
 
-                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow" title="Estimated time percentage">
-                    <FaChartPie className="text-green-500 text-4xl mr-4" />
+                <div
+                    className={`rounded-lg p-6 flex items-center transition-shadow ${isDarkMode
+                        ? "bg-gray-800 shadow-lg hover:shadow-gray-700"
+                        : "bg-white shadow-lg hover:shadow-xl"
+                        }`}
+                    title="Estimated time percentage"
+                >
+                    <FaChartPie
+                        className={`text-4xl mr-4 ${isDarkMode ? "text-green-300" : "text-green-500"
+                            }`}
+                    />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Estimated Time</h2>
-                        <p className="text-gray-600 text-lg">{dashboardData.estimatedTimePercentage}%</p>
+                        <h2
+                            className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-800"
+                                }`}
+                        >
+                            Estimated Time
+                        </h2>
+                        <p
+                            className={`text-lg ${isDarkMode ? "text-gray-400" : "text-gray-600"
+                                }`}
+                        >
+                            {dashboardData.estimatedTimePercentage}%
+                        </p>
                     </div>
                 </div>
 
-                <div className="bg-white shadow-lg rounded-lg p-6 flex items-center hover:shadow-xl transition-shadow" title="Total number of tasks">
-                    <FaTasks className="text-yellow-500 text-4xl mr-4" />
+                <div
+                    className={`rounded-lg p-6 flex items-center transition-shadow ${isDarkMode
+                        ? "bg-gray-800 shadow-lg hover:shadow-gray-700"
+                        : "bg-white shadow-lg hover:shadow-xl"
+                        }`}
+                    title="Total number of tasks"
+                >
+                    <FaTasks
+                        className={`text-4xl mr-4 ${isDarkMode ? "text-yellow-300" : "text-yellow-500"
+                            }`}
+                    />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Task Breakdown</h2>
-                        <p className="text-gray-600 text-lg">{dashboardData.taskCount} Tasks</p>
+                        <h2
+                            className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-800"
+                                }`}
+                        >
+                            Task Breakdown
+                        </h2>
+                        <p
+                            className={`text-lg ${isDarkMode ? "text-gray-400" : "text-gray-600"
+                                }`}
+                        >
+                            {dashboardData.taskCount} Tasks
+                        </p>
                     </div>
                 </div>
-
             </div>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
+                <div
+                    className={`rounded-lg p-8 transition-shadow ${isDarkMode
+                        ? "bg-gray-800 shadow-lg hover:shadow-gray-700"
+                        : "bg-white shadow-lg hover:shadow-xl"
+                        }`}
+                >
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-2xl font-bold text-gray-800">Daily Time Spent</h3>
+                        <h3
+                            className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-800"
+                                }`}
+                        >
+                            Daily Time Spent
+                        </h3>
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
+                            className={`flex items-center py-2 px-4 rounded-md transition ${isDarkMode
+                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                : "bg-blue-500 text-white hover:bg-blue-600"
+                                }`}
                         >
                             <FaExchangeAlt className="mr-2 text-white" />
                             Change Date
@@ -341,17 +431,15 @@ const AnalyticsPage = () => {
                                     tooltip: {
                                         callbacks: {
                                             title: (tooltipItem) => {
-                                                // Get the day of the week
-                                                const dayOfWeek = dailyData.labels[tooltipItem[0].dataIndex]; // Use the label (Mon, Tue, etc.)
-                                                // Get the start date of the selected week and calculate the corresponding date
+                                                const dayOfWeek = dailyData.labels[tooltipItem[0].dataIndex];
                                                 const startDate = moment(weekStartDates[selectedWeek - 1]);
-                                                const date = startDate.add(tooltipItem[0].dataIndex, 'days').format('MMM D, YYYY');
-                                                return `${dayOfWeek} - ${date}`; // Show day and corresponding date
+                                                const date = startDate
+                                                    .add(tooltipItem[0].dataIndex, "days")
+                                                    .format("MMM D, YYYY");
+                                                return `${dayOfWeek} - ${date}`;
                                             },
-                                            label: (tooltipItem) => {
-                                                // You can show the time spent for that day (example: 3 hours)
-                                                return `Time Spent: ${tooltipItem.raw} hours`;
-                                            },
+                                            label: (tooltipItem) =>
+                                                `Time Spent: ${tooltipItem.raw} hours`,
                                         },
                                     },
                                 },
@@ -359,24 +447,35 @@ const AnalyticsPage = () => {
                                     x: {
                                         title: {
                                             display: true,
-                                            text: 'Days of the Week',
+                                            text: "Days of the Week",
+                                            color: isDarkMode ? "white" : "black",
                                         },
                                     },
                                     y: {
                                         title: {
                                             display: true,
-                                            text: 'Hours',
+                                            text: "Hours",
+                                            color: isDarkMode ? "white" : "black",
                                         },
                                     },
                                 },
                             }}
                         />
-
                     )}
                 </div>
 
-                <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-12">Task Status Breakdown</h3>
+                <div
+                    className={`rounded-lg p-8 transition-shadow ${isDarkMode
+                        ? "bg-gray-800 shadow-lg hover:shadow-gray-700"
+                        : "bg-white shadow-lg hover:shadow-xl"
+                        }`}
+                >
+                    <h3
+                        className={`text-2xl font-bold mb-12 ${isDarkMode ? "text-gray-100" : "text-gray-800"
+                            }`}
+                    >
+                        Task Status Breakdown
+                    </h3>
                     <div className="flex justify-center">
                         <Doughnut
                             data={taskStatusData}
@@ -385,7 +484,7 @@ const AnalyticsPage = () => {
                                 responsive: true,
                                 plugins: {
                                     legend: {
-                                        position: 'bottom',
+                                        position: "bottom",
                                         labels: {
                                             font: {
                                                 size: 14,
@@ -402,14 +501,20 @@ const AnalyticsPage = () => {
             </div>
 
             {/* AI Feedback Section */}
-            <div className="bg-white shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow">
+            <div
+                className={`${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-800'
+                    } shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow`}
+            >
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900">AI Feedback</h3>
+                    <h3 className="text-2xl font-bold">
+                        AI Feedback
+                    </h3>
                     <button
                         onClick={handleRefresh}
-                        className="flex items-center bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition transform duration-300 ease-in-out"
+                        className={`flex items-center ${isDarkMode ? 'bg-blue-700 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'
+                            } text-white py-2 px-6 rounded-md transition transform duration-300 ease-in-out`}
                     >
-                        <FaSyncAlt className="mr-2 text-white" />
+                        <FaSyncAlt className="mr-2" />
                         Refresh
                     </button>
                 </div>
@@ -420,45 +525,79 @@ const AnalyticsPage = () => {
                         <Loading />
                     </div>
                 ) : (
-                    <div className="space-y-8 text-gray-700 text-lg">
+                    <div className="space-y-8">
                         {Feedback?.keyIssues.map((issue, index) => {
                             const { icon, bgColor } = getIconAndBgColor(issue.title);
+
+                            // Adjust background color for dark mode
+                            const adjustedBgColor = bgColor;
 
                             // Remove numbers and the period from the start of the title
                             const cleanedTitle = issue.title.replace(/^\d+\.\s*/, '');
 
                             return (
-                                <div key={index} className={`space-y-6 ${bgColor} p-6 rounded-lg shadow-md hover:bg-opacity-80 transition-all`}>
+                                <div
+                                    key={index}
+                                    className={`space-y-6 ${adjustedBgColor} p-6 rounded-lg shadow-md hover:bg-opacity-80 transition-all`}
+                                >
                                     <div className="flex items-center mb-4">
                                         {/* Icon for each section */}
                                         <div className="mr-4 text-2xl">{icon}</div>
-                                        <h3 className="text-2xl font-semibold text-gray-800">{cleanedTitle}</h3>
+                                        <h3 className="text-2xl font-semibold">
+                                            {cleanedTitle}
+                                        </h3>
                                     </div>
 
                                     {/* Render content for each section */}
-                                    <div style={{ paddingLeft: '1.5rem', lineHeight: '1.6' }}>
+                                    <div
+                                        style={{
+                                            paddingLeft: '1.5rem',
+                                            lineHeight: '1.6',
+                                        }}
+                                    >
                                         {issue.content.split('\n').map((line, lineIndex) => {
-                                            const cleanLine = line.replace(/\*\*/g, '').replace(/\*/g, '').trim(); // Clean up line
+                                            const cleanLine = line
+                                                .replace(/\*\*/g, '')
+                                                .replace(/\*/g, '')
+                                                .trim(); // Clean up line
                                             const isBullet = cleanLine.startsWith('•');
                                             const isNumbered = /^\d+\./.test(cleanLine); // Check if the line starts with a number
                                             let lineWithoutNumber = cleanLine;
 
                                             // If the line starts with a number, remove the number
                                             if (isNumbered) {
-                                                lineWithoutNumber = cleanLine.replace(/^\d+\.\s*/, ''); // Remove any number
+                                                lineWithoutNumber = cleanLine.replace(
+                                                    /^\d+\.\s*/,
+                                                    ''
+                                                ); // Remove any number
                                             }
 
                                             return (
                                                 <p key={lineIndex} className="mb-3">
                                                     {/* Don't number the first line of each section */}
-                                                    {lineIndex !== 0 && !isBullet && (
-                                                        <span className="font-bold text-blue-500 mr-2">
-                                                            {lineIndex}. {/* Start numbering from 1 for the rest of the lines */}
-                                                        </span>
-                                                    )}
+                                                    {lineIndex !== 0 &&
+                                                        !isBullet && (
+                                                            <span
+                                                                className={`font-bold ${isDarkMode
+                                                                    ? 'text-blue-400'
+                                                                    : 'text-blue-500'
+                                                                    } mr-2`}
+                                                            >
+                                                                {lineIndex}. {/* Start numbering from 1 for the rest of the lines */}
+                                                            </span>
+                                                        )}
 
                                                     {/* Render bullet points */}
-                                                    {isBullet && <span className="font-bold text-blue-500 mr-2">•</span>}
+                                                    {isBullet && (
+                                                        <span
+                                                            className={`font-bold ${isDarkMode
+                                                                ? 'text-blue-400'
+                                                                : 'text-blue-500'
+                                                                } mr-2`}
+                                                        >
+                                                            •
+                                                        </span>
+                                                    )}
 
                                                     {/* Render cleaned content without the number */}
                                                     <span>{lineWithoutNumber}</span>
@@ -473,16 +612,21 @@ const AnalyticsPage = () => {
                 )}
             </div>
 
-
             {/* Modal for Date Selection */}
             {showModal && (
-                <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Select Month, Year, and Week</h2>
+                <div
+                    className={`fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-500'}`}
+                >
+                    <div
+                        className={`p-8 rounded-lg shadow-lg w-96 ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-800'}`}
+                    >
+                        <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                            Select Month, Year, and Week
+                        </h2>
 
                         {/* Year Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-800">Year</label>
+                            <label className={`text-gray-800 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>Year</label>
                             <select
                                 value={selectedYear}
                                 onChange={(e) => {
@@ -490,7 +634,7 @@ const AnalyticsPage = () => {
                                     setSelectedYear(year);
                                     setWeekStartDates(getWeeksStartDates(year, selectedMonth)); // Update weeks when year changes
                                 }}
-                                className="w-full p-2 border border-gray-300 rounded-md"
+                                className={`w-full p-2 border rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-800 border-gray-300'}`}
                             >
                                 {[2023, 2024, 2025].map((year) => (
                                     <option key={year} value={year}>
@@ -502,7 +646,7 @@ const AnalyticsPage = () => {
 
                         {/* Month Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-800">Month</label>
+                            <label className={`text-gray-800 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>Month</label>
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => {
@@ -510,7 +654,7 @@ const AnalyticsPage = () => {
                                     setSelectedMonth(month);
                                     setWeekStartDates(getWeeksStartDates(selectedYear, month)); // Update weeks when month changes
                                 }}
-                                className="w-full p-2 border border-gray-300 rounded-md"
+                                className={`w-full p-2 border rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-800 border-gray-300'}`}
                                 disabled={!selectedYear} // Disable month selection if year is not selected
                             >
                                 {[...Array(12)].map((_, i) => (
@@ -523,11 +667,11 @@ const AnalyticsPage = () => {
 
                         {/* Week Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-800">Week</label>
+                            <label className={`text-gray-800 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>Week</label>
                             <select
                                 value={selectedWeek}
                                 onChange={(e) => setSelectedWeek(Number(e.target.value))}
-                                className="w-full p-2 border border-gray-300 rounded-md"
+                                className={`w-full p-2 border rounded-md ${isDarkMode ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-800 border-gray-300'}`}
                                 disabled={!selectedMonth} // Disable week selection if month is not selected
                             >
                                 {weekStartDates.map((startDate, index) => (
@@ -542,7 +686,7 @@ const AnalyticsPage = () => {
                         <div className="flex justify-end">
                             <button
                                 onClick={handleDateChange}
-                                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
+                                className={`bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition ${isDarkMode ? 'bg-blue-700 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'}`}
                             >
                                 Save
                             </button>
@@ -551,13 +695,14 @@ const AnalyticsPage = () => {
                         {/* Close Modal */}
                         <div
                             onClick={() => setShowModal(false)}
-                            className="absolute top-2 right-2 text-gray-500 cursor-pointer"
+                            className={`absolute top-2 right-2 cursor-pointer ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
                         >
                             X
                         </div>
                     </div>
                 </div>
             )}
+
 
         </div>
     );
