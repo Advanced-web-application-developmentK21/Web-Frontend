@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { start } from "repl";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useTheme } from "../../context/ThemeContext";
 interface NewTaskProps {
   onAddTask: (newTask: Task) => void;
   onClose: () => void;
@@ -26,6 +27,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
   const [dateError, setDateError] = useState(true);
 
   const userId = localStorage.getItem("userId");
+  const { isDarkMode } = useTheme();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -144,9 +146,17 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center  ${
+        isDarkMode ? "bg-black bg-opacity-50" 
+        : "bg-gray-800 bg-opacity-80"
+      }`}
+    >
       <div
-        className="w-full max-w-lg p-6 bg-[#e6f4f1] rounded-lg shadow-lg transform transition-all"
+        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${
+          isDarkMode ? "bg-[#545555FF]"
+          : "bg-[#e6f4f1]"
+        }`}
         style={{ animation: "fadeIn 0.3s ease-in-out" }}
       >
         <div className="flex bg-[#008b8b] rounded-lg mb-6 items-center justify-center pt-3 pb-3">
@@ -199,12 +209,24 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
               fill="white"
             ></path>
           </svg>
-          <h2 className="text-2xl font-bold text-white">Create New Task</h2>
+          <h2 
+            className={`text-2xl font-bold ${
+              isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-transparent bg-clip-text"
+              : "text-white"
+            }`}
+          >
+            Create New Task
+          </h2>
         </div>
 
         <div className="form-control mb-2 ">
           <label className="label ">
-            <span className="label-text font-medium">
+            <span 
+              className={`label-text font-medium ${
+                isDarkMode ? "text-white"
+                : "text-black"
+              }`}
+            >
               Task Title <span className="text-red-500">*</span>
             </span>
           </label>
@@ -218,7 +240,13 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
         </div>
         <div className="form-control mb-2 ">
           <label className="label ">
-            <span className="label-text font-medium">Description</span>
+          <span 
+            className={`label-text font-medium ${
+              isDarkMode ? "text-white"
+              : "text-black"
+            }`}
+          >
+              Description</span>
           </label>
           <input
             type="text"
@@ -231,7 +259,12 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
         <div className="flex justify-between">
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">
+            <span 
+              className={`label-text font-medium ${
+                isDarkMode ? "text-white"
+                : "text-black"
+              }`}
+            >
                 Start Date <span className="text-red-500">*</span>
               </span>
             </label>
@@ -296,7 +329,12 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">
+              <span 
+                className={`label-text font-medium ${
+                  isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
+              >
                 Due Date <span className="text-red-500">*</span>
               </span>
             </label>
@@ -367,7 +405,12 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
         <div className="flex justify-between  ">
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">
+              <span 
+                className={`label-text pr-1 font-medium ${
+                  isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
+              >
                 Priority Level
               </span>
             </label>
@@ -387,7 +430,14 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">Status</span>
+              <span 
+                className={`label-text pr-1 font-medium ${
+                  isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
+              >
+                Status
+              </span>
             </label>
             <div>
               <select
@@ -406,7 +456,13 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className="label-text pr-1 font-medium">Estimate Time</span>
+              <span className={`label-text pr-1 font-medium ${
+                  isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
+              >
+                Estimate Time
+              </span>
             </label>
             <div className=" p-3 w-fit bg-rose-300 rounded-md pt-1 pb-2 mt-2">
               {getFormatedStringFromDays(taskData.estimateTime)}
@@ -429,13 +485,19 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
         <div className="flex justify-end mt-6">
           <button
-            className="btn btn-primary bg-[#95b0b0] px-5 py-2 rounded-xl hover:bg-[#a5e4e4] transition-all delay-50 mr-3"
+            className={`btn btn-primary  px-5 py-2 rounded-xl  transition-all delay-50 mr-3 ${
+              isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
+              : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
+            }`}
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="btn btn-primary bg-[#AEEEEE] px-5 py-2 rounded-xl hover:bg-[#a5e4e4] transition-all delay-50"
+            className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${
+            isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] hover:text-gray-800 text-white"
+              : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-black"
+            }`}
             onClick={handleSubmit}
           >
             Add Task

@@ -5,6 +5,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { Console } from "console";
 import { title } from "process";
+import { useTheme } from "../../context/ThemeContext";
 
 interface TaskDetailsProps {
   Tasks?: Task[];
@@ -29,6 +30,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       keyIssues: { title: string; content: string }[];
     } | null>(null);
   const [SuggestModal, setSuggestModal] = useState(false);
+  const { isDarkMode } = useTheme();
 
   
   const handleInputChange = (
@@ -83,7 +85,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const validateFields = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!editedTask.title.trim()) {
-      newErrors.title = "Task name is required.";
+      newErrors.title = "Task title is required.";
     }
     if (!editedTask.priority) {
       newErrors.priority = "Priority must be selected.";
@@ -250,19 +252,37 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center  ${
+        isDarkMode ? "bg-black bg-opacity-50" 
+        : "bg-gray-800 bg-opacity-80"
+      }`}
+    >
       <div
-        className="w-full max-w-lg p-6 bg-[#e6f4f1] rounded-lg shadow-lg transform transition-all"
+        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${
+          isDarkMode ? "bg-[#545555FF]"
+          : "bg-[#e6f4f1]"
+        }`}
         style={{ animation: "fadeIn 0.3s ease-in-out" }}
       >
-        <h2 className="text-2xl text-center px-4 mb-6 py-2 rounded-lg font-bold text-white bg-[#008b8b]">
+        <h2 
+          className={`text-2xl text-center px-4 mb-6 py-2 rounded-lg font-bold bg-[#008b8b] ${
+            isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-gray-800"
+            : "text-white"
+          }`}
+        >
           Task Details
         </h2>
         <div className="space-y-5">
-          {/* Task Name */}
+          {/* Task Title*/}
           <div>
-            <label className="mb-1 block text-md font-medium text-gray-700 ">
-              Task Name
+            <label 
+              className={`mb-1 block text-md font-medium ${
+                isDarkMode ? "text-white"
+                  : "text-gray-700"
+              }`}         
+            >
+              Task Title
             </label>
             <input
               type="text"
@@ -280,7 +300,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           {/* Description */}
           <div>
-            <label className="mb-1 block text-md font-medium text-gray-700">
+          <label 
+              className={`mb-1 block text-md font-medium ${
+                isDarkMode ? "text-white"
+                  : "text-gray-700"
+              }`}         
+            >
               Description
             </label>
             <textarea
@@ -295,7 +320,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           <div className="flex space-x-4">
             {/* Priority */}
             <div className="w-full">
-              <label className="mb-1 block text-md font-medium text-gray-700">
+              <label 
+                className={`mb-1 block text-md font-medium ${
+                  isDarkMode ? "text-white"
+                    : "text-gray-700"
+                }`}         
+              >
                 Priority
               </label>
               <select
@@ -316,7 +346,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
             {/* Status */}
             <div className="w-full">
-              <label className="mb-1 block text-md font-medium text-gray-700">
+              <label 
+                className={`mb-1 block text-md font-medium ${
+                  isDarkMode ? "text-white"
+                    : "text-gray-700"
+                }`}         
+              >
                 Status
               </label>
               <select
@@ -335,7 +370,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           <div className="flex space-x-4">
             <div className="w-full">
-              <label className="mb-1 block text-md font-medium text-gray-700">
+              <label 
+                className={`mb-1 block text-md font-medium ${
+                  isDarkMode ? "text-white"
+                    : "text-gray-700"
+                }`}         
+              >
                 Start Date
               </label>
               <DatePicker
@@ -379,7 +419,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               />
             </div>
             <div className="w-full">
-              <label className="mb-1 block text-md font-medium text-gray-700">
+              <label 
+                className={`mb-1 block text-md font-medium ${
+                  isDarkMode ? "text-white"
+                    : "text-gray-700"
+                }`}         
+              >
                 Due Date
               </label>
               <DatePicker
@@ -460,21 +505,29 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           <button
             onClick={onClose}
-            className="btn btn-outline px-4 py-2 rounded-md text-white font-medium"
+            className={`btn btn-outline px-4 py-2 rounded-md font-medium ${
+              isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
+              : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
+            }`}
             style={{ backgroundColor: "#95b0b0" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="btn btn-primary px-4 py-2 rounded-md text-white font-medium"
-            style={{ backgroundColor: "#00aab0" }}
+            className={`btn btn-primary px-4 py-2 rounded-md font-medium ${
+              isDarkMode ? "bg-[#408E4BFF] hover:bg-[#15FF00FF] hover:text-gray-800 text-white"
+                : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-white"
+              }`}
           >
             Save Changes
           </button>
           <button
             onClick={handleDelete}
-            className="btn btn-danger px-4 py-2 rounded-md text-white font-medium"
+            className={`btn btn-danger px-4 py-2 rounded-md text-white font-medium" ${
+              isDarkMode ? "bg-[#38C44BFFhover:bg-[#FF0000FF] hover:text-gray-800 text-white"
+                : "bg-[#A36161FF] hover:bg-[#BC0F0FFF] text-white"
+            }`}
             style={{ backgroundColor: "#b74e4e" }}
           >
             Delete Task

@@ -5,6 +5,7 @@ import TaskCard from "./TaskCard";
 import NewTask from "./NewTask";
 import TaskDetails from "./TaskDetails";
 import Loading from "../../components/loading";
+import { useTheme } from "../../context/ThemeContext";
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -17,6 +18,7 @@ const TaskList: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("title");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const { isDarkMode } = useTheme();
 
   const userId = localStorage.getItem("userId");
 
@@ -122,14 +124,30 @@ const TaskList: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 min-h-screen">
+    <div
+      className={`p-6 relative min-h-screen ${
+        isDarkMode ? "bg-white-100 text-black" 
+        : "bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 text-gray-800"
+      }`}
+    
+    >
       <div className="max-w-5xl mx-auto">
         {/* Title Section */}
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800 leading-tight">
+          <h1 
+            className={`text-4xl font-extrabold leading-tight ${
+              isDarkMode ? "bg-gradient-to-br from-white via-green-300 to-blue-600 text-transparent bg-clip-text"
+              : "text-gray-800"
+            }`}>
             Task Management
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p
+            className={`mt-2 text-lg ${
+              isDarkMode
+                ? "bg-gradient-to-br from-white via-red-300 to-red-600 text-transparent bg-clip-text"
+                : "text-gray-600"
+            }`}
+          >
             Manage your tasks efficiently and stay on top of your projects
           </p>
         </div>
