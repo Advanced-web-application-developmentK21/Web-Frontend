@@ -262,7 +262,11 @@ const TaskList: React.FC = () => {
 
 
       {isNewTaskModalOpen && (
-        <NewTask onAddTask={handleAddTask} onClose={handleNewTaskModalToggle} />
+        <NewTask 
+          Tasks={tasks} 
+          onAddTask={handleAddTask} 
+          onClose={handleNewTaskModalToggle} 
+        />
       )}
 
       {isModalOpen && selectedTask && (

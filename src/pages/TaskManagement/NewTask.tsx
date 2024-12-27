@@ -7,12 +7,14 @@ import { start } from "repl";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useTheme } from "../../context/ThemeContext";
+import { title } from "process";
 interface NewTaskProps {
+  Tasks?: Task[];
   onAddTask: (newTask: Task) => void;
   onClose: () => void;
 }
 
-const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
+const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
   const [taskData, setTaskData] = useState<Task>({
     id: "",
     title: "",
@@ -25,6 +27,11 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
   });
 
   const [dateError, setDateError] = useState(true);
+  const [suggest_loading, setSuggestLoading] = useState(false);
+    const [feedback, setFeedback] = useState<{
+        keyIssues: { title: string; content: string }[];
+      } | null>(null);
+    const [SuggestModal, setSuggestModal] = useState(false);
 
   const userId = localStorage.getItem("userId");
   const { isDarkMode } = useTheme();
@@ -142,6 +149,70 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
         title: "Error",
         text: `Error: ${errorMessage}`,
       });
+    }
+  };
+
+  function parseFeedback (feedbackText: string) {
+    const lines = feedbackText.split("\n").filter(line => line.trim() !== "");
+    const keyIssues = lines.map(line => {
+      const match = line.match(/^\* \*\*(.+?):\*\*/); // Match lines starting with * **Title:**
+      if (match) {
+        return {
+          title: match[1].trim() + ": ",
+          content: line.replace(match[0], "").trim(), // Remove the matched title part
+        };
+      } else {
+        return {
+          title: "",
+          content: line.trim(), // Use the full line as content if no title match
+        };
+      }
+    });
+  
+    return { keyIssues };
+  };
+  const AI_Suggest = async () => {
+    setSuggestLoading(true);
+    
+    const priorityMap = {
+      low: "Low",
+      medium: "Medium",
+      high: "High",
+    };
+  
+    const statusMap = {
+      todo: "Todo",
+      inprogress: "In Progress",
+      completed: "Completed",
+      expired: "Expired",
+    };
+    const curTask = {
+      title: taskData.title,
+      description: taskData.description,
+      priority: priorityMap[taskData.priority],
+      estimateTime: taskData.estimateTime,
+      status: statusMap[taskData.status],
+      startDate: taskData.startDate ? taskData.startDate.toISOString() : new Date().toISOString(),
+      dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : new Date().toISOString(),
+    };
+
+    console.log(curTask);
+    //console.log(task);
+
+    try {
+      const response = await axios.post(`http://localhost:4000/task/suggest`, {
+        curTask, Tasks
+      });
+
+
+      console.log('Frontend received data:', response.data.feedback);
+      const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
+      setFeedback(parsedFeedback);
+      setSuggestModal(true);
+    } catch (error) {
+      console.error('Error analyzing schedule:', error);
+    } finally {
+      setSuggestLoading(false);
     }
   };
 
@@ -485,6 +556,15 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
 
         <div className="flex justify-end mt-6">
           <button
+            onClick={AI_Suggest}
+            disabled={suggest_loading}
+            className="btn btn-outline px-2 py-2 rounded-md text-blue font-medium top-right-10"
+            style={{ backgroundColor: "#9ADAACFF" }}
+          >
+            {suggest_loading ? 'Analyzing...' : 'AI suggest'}
+          </button>
+
+          <button
             className={`btn btn-primary  px-5 py-2 rounded-xl  transition-all delay-50 mr-3 ${
               isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
               : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
@@ -493,6 +573,7 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
           >
             Cancel
           </button>
+          
           <button
             className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${
             isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] hover:text-gray-800 text-white"
@@ -502,8 +583,31 @@ const NewTask: React.FC<NewTaskProps> = ({ onAddTask, onClose }) => {
           >
             Add Task
           </button>
+
         </div>
       </div>
+
+      {/* Show Suggest Modal */}
+      {SuggestModal && (
+        <div className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto">
+          <div className="space-y-6 mb-6">
+            {feedback?.keyIssues.map((issue, index) => {
+              return (
+                <div key={index}>
+                  <span style={{ fontWeight: 'bold', fontSize: '1rem', color: '#333' }}>
+                    {issue.title.replace(/\*\*/g, '')}
+                  </span>
+                  
+                  <span style={{ fontSize: '1rem', color: '#333' }}>
+                      {issue.content}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
