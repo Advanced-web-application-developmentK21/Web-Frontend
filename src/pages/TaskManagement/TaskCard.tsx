@@ -1,6 +1,7 @@
 import React, { forwardRef } from "react";
 import { Task } from "../../types/type";
 import { format } from "date-fns"; // Importing date-fns for date formatting
+import { useTheme } from "../../context/ThemeContext";
 
 interface TaskCardProps {
   task: Task;
@@ -9,17 +10,30 @@ interface TaskCardProps {
 
 const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(
   ({ task, onClick, ...props }, ref) => {
+    const { isDarkMode } = useTheme();
     const priorityStyles: Record<Task["priority"], string> = {
-      low: "bg-green-100 text-green-500",
-      medium: "bg-yellow-100 text-yellow-500",
-      high: "bg-red-100 text-red-500",
+      low: `${
+        isDarkMode ? "bg-green-200 text-green-1000"
+        : "bg-green-100 text-green-500"
+      }`,
+      medium: `${
+        isDarkMode ? "bg-yellow-200 text-yellow-1000"
+        :"bg-yellow-100 text-yellow-500"
+      }`,
+      high: `${
+        isDarkMode ? "bg-red-200 text-red-1000"
+        : "bg-red-100 text-red-500"
+      }`,
     };
 
     // Define status-specific styles
     const statusStyles: Record<Task["status"], string> = {
       inprogress: "bg-yellow-100 text-yellow-800",
+      
       completed: "bg-green-100 text-green-800",
+      
       todo: "bg-blue-100 text-blue-800",
+      
       expired: "bg-red-100 text-red-800",
     };
 

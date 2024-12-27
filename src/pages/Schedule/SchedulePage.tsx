@@ -17,6 +17,7 @@ import axios from "axios";
 import { FaCheckCircle, FaClipboardList, FaEdit, FaExclamationTriangle, FaRegClock, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { IoClose } from "react-icons/io5";
+import { useTheme } from "../../context/ThemeContext";
 
 moment.locale("en-GB");
 const localizer = momentLocalizer(moment);
@@ -42,6 +43,7 @@ export default function Schedule() {
     keyIssues: { title: string; content: string }[];
   } | null>(null);
 
+  const { isDarkMode } = useTheme();
   const userId = localStorage.getItem("userId");
 
   // Handle feedback parsing and update state
@@ -289,17 +291,32 @@ export default function Schedule() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-indigo-100 to-purple-100 py-10">
+    <div 
+      className={`min-h-screen py-10 ${
+        isDarkMode ? "bg-gradient-to-r from-gray-600 to-gray-100"
+        : "bg-gradient-to-r from-indigo-100 to-purple-100"
+      }`}
+    >
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
         📅{" "}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
+        <span 
+          className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 ${
+            isDarkMode ? "text-transparent bg-gradient-to-r from-red-600 to-red-800"
+            : "text-transparent bg-gradient-to-r from-indigo-500 to-purple-600"
+          }`}
+        >
           Task Calendar
         </span>
       </h1>
 
       <div className="flex items-center justify-between px-5 mb-6">
         <div className="relative z-50 flex items-center space-x-3">
-          <label htmlFor="date-picker" className="text-lg font-semibold text-gray-700">
+          <label htmlFor="date-picker" 
+            className={`text-lg font-semibold ${
+              isDarkMode ? "text-white"
+              : "text-gray-700"
+            }`}
+          >
             Select Month and Year:
           </label>
           <DatePicker

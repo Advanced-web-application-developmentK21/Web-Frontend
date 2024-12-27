@@ -180,7 +180,7 @@ const TaskList: React.FC = () => {
             >
               <option value="all">All Statuses</option>
               <option value="todo">Todo</option>
-              <option value="in-progress">In Progress</option>
+              <option value="inprogress">In Progress</option>
               <option value="completed">Completed</option>
               <option value="expired">Expired</option>
             </select>
