@@ -6,6 +6,7 @@ import NewTask from "./NewTask";
 import TaskDetails from "./TaskDetails";
 import Loading from "../../components/loading";
 import { useTheme } from "../../context/ThemeContext";
+import { useLocation } from "react-router-dom";
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -21,6 +22,8 @@ const TaskList: React.FC = () => {
   const { isDarkMode } = useTheme();
 
   const userId = localStorage.getItem("userId");
+  const location = useLocation();
+  const Set_task = location.state?.schedule;
 
   const tasksPerPage = 4;
 
@@ -48,6 +51,15 @@ const TaskList: React.FC = () => {
           estimateTime: task.estimatedTime,
         }));
         setTasks(fetchedTasks);
+
+        // Check if Set_task exists in the fetched tasks and set it as the default task
+        if (Set_task) {
+          const matchingTask = fetchedTasks.find((t: { title: any; }) => t.title === Set_task.title);
+          if (matchingTask) {
+            setSelectedTask(matchingTask);
+            setIsModalOpen(true);
+          }
+        }
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }

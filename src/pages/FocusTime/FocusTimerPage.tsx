@@ -22,6 +22,7 @@ function FocusTimer() {
   const [breakDuration, setBreakDuration] = useState<number>(5); // Break duration in minutes
   const [timeLeft, setTimeLeft] = useState<number>(0); // Countdown in seconds
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState(false);  // If the timer is paused
   const [isBreak, setIsBreak] = useState<boolean>(false); // Toggle work/break
 
   const { setIsTimerRunning } = useAuth();
@@ -100,13 +101,11 @@ function FocusTimer() {
       }
     }
 
-    if (isRunning && timeLeft > 0) {
+    if (isRunning && timeLeft > 0 && !isPaused) {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false); // Pause timer temporarily
-
       const nextPhase = isBreak ? "work session" : "break";
       if (!isBreak && curSession < session) {
         Swal.fire({
@@ -155,10 +154,15 @@ function FocusTimer() {
           }
         });
       }
+    } else {
+      // Pause timer temporarily
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev);
+      }, 1000);
     }
 
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft, isBreak, duration, breakDuration]);
+  }, [isRunning, isPaused, timeLeft, isBreak, duration, breakDuration]);
 
   const startTimer = () => {
     const finalTask = task; // Use newTask if provided, else selected task
@@ -180,8 +184,13 @@ function FocusTimer() {
   };
 
   const stopTimer = () => {
-    setIsRunning(false);
-    setIsTimerRunning(false);
+    if (isPaused) {
+      // Resuming the timer
+      setIsPaused(false);
+    } else {
+      // Pausing the timer
+      setIsPaused(true);
+    }
   };
 
   const resetTimer = () => {
@@ -386,14 +395,20 @@ function FocusTimer() {
             <FaPlay className="mr-2 text-xl" /> Start
           </button>
           <button
-            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
-              ? "bg-gradient-to-r from-red-600 to-red-800 text-white hover:from-red-700 hover:to-red-900"
-              : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
-              }`}
+            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300  ${
+              isPaused ? `${isDarkMode
+                ? "bg-gradient-to-r from-green-600 to-green-800 text-white hover:from-green-700 hover:to-green-900"
+                : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:from-green-600 hover:to-green-800"
+                }`
+              : `${isDarkMode
+                ? "bg-gradient-to-r from-red-600 to-red-800 text-white hover:from-red-700 hover:to-red-900"
+                : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
+                }`
+            }`}
             onClick={stopTimer}
             disabled={!isRunning}
           >
-            <FaStop className="mr-2 text-xl" /> Stop
+            <FaStop className="mr-2 text-xl" /> {isPaused ? "Continue" : "Stop"}
           </button>
         </div>
 
@@ -403,7 +418,7 @@ function FocusTimer() {
           <button
             className={`px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
               ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              : "bg-gray-300 text-gray-800 hover:bg-gray-400"
+              : "bg-[#000000FF] text-white hover:bg-[#433534FF]"
               }`} onClick={resetTimer}
           >
             <FaRedo className="mr-2 inline text-lg" /> Reset
