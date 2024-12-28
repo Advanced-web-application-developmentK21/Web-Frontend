@@ -1,8 +1,10 @@
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { FaRegWindowClose } from "react-icons/fa";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Chatbot() {
+  const { isDarkMode } = useTheme();
   const userId = localStorage.getItem("userId");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([{ sender: "bot", text: "Hello! May I help you?" }]);
@@ -77,15 +79,19 @@ export default function Chatbot() {
     <div className="fixed bottom-4 right-8 z-50">
       <button
         onClick={toggleChat}
-        className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300"
+        className={`w-14 h-14 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-500 to-purple-500'} text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300`}
         aria-label="Chatbot"
       >
         💬
       </button>
 
       {isChatOpen && (
-        <div className="absolute bottom-20 right-0 w-96 h-[28rem] bg-white border border-gray-200 rounded-2xl shadow-lg flex flex-col animate-slideUp">
-          <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold flex justify-between items-center rounded-t-2xl">
+        <div
+          className={`absolute bottom-20 right-0 w-96 h-[28rem] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-black'} border rounded-2xl shadow-lg flex flex-col animate-slideUp`}
+        >
+          <div
+            className={`p-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gradient-to-r from-blue-600 to-purple-600'} text-white font-bold flex justify-between items-center rounded-t-2xl`}
+          >
             <span>Consulting Chatbot</span>
             <div className="flex space-x-2">
               <button
@@ -98,19 +104,20 @@ export default function Chatbot() {
                 onClick={toggleChat}
                 className="text-white text-lg font-bold hover:text-gray-300"
               >
-                <FaRegWindowClose size={20}/>
+                <FaRegWindowClose size={20} />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50">
+          <div
+            className={`flex-1 p-4 overflow-y-auto space-y-4 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+          >
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${msg.sender === "bot" ? "justify-start" : "justify-end"
-                  }`}
+                className={`flex ${msg.sender === 'bot' ? 'justify-start' : 'justify-end'}`}
               >
-                {msg.sender === "bot" && (
+                {msg.sender === 'bot' && (
                   <img
                     src="/bot.avif"
                     alt="Bot"
@@ -118,15 +125,19 @@ export default function Chatbot() {
                   />
                 )}
                 <div
-                  className={`max-w-[70%] px-4 py-2 rounded-xl shadow ${msg.sender === "bot"
-                    ? "bg-gray-200 text-black"
-                    : "bg-blue-500 text-white"
+                  className={`max-w-[70%] px-4 py-2 rounded-xl shadow ${msg.sender === 'bot'
+                    ? isDarkMode
+                      ? 'bg-gray-700 text-white'
+                      : 'bg-gray-200 text-black'
+                    : isDarkMode
+                      ? 'bg-blue-700 text-white'
+                      : 'bg-blue-500 text-white'
                     }`}
-                  style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }} // Cho phép xuống dòng trong tin nhắn
+                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} // Cho phép xuống dòng trong tin nhắn
                 >
                   {msg.text}
                 </div>
-                {msg.sender === "user" && (
+                {msg.sender === 'user' && (
                   <img
                     src="/user.png"
                     alt="User"
@@ -143,18 +154,20 @@ export default function Chatbot() {
                   alt="Bot"
                   className="w-10 h-10 rounded-full mr-3"
                 />
-                <div className="bg-gray-200 text-black px-4 py-2 rounded-xl shadow flex items-center space-x-1">
+                <div
+                  className={`px-4 py-2 rounded-xl shadow flex items-center space-x-1 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'}`}
+                >
                   <span
                     className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0s", animationDuration: "0.6s" }}
+                    style={{ animationDelay: '0s', animationDuration: '0.6s' }}
                   ></span>
                   <span
                     className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.2s", animationDuration: "0.6s" }}
+                    style={{ animationDelay: '0.2s', animationDuration: '0.6s' }}
                   ></span>
                   <span
                     className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.4s", animationDuration: "0.6s" }}
+                    style={{ animationDelay: '0.4s', animationDuration: '0.6s' }}
                   ></span>
                 </div>
               </div>
@@ -166,7 +179,7 @@ export default function Chatbot() {
           <div className="p-4 border-t border-gray-300 bg-white">
             <div className="flex items-center space-x-2">
               <textarea
-                className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 p-3 border ${isDarkMode ? 'bg-gray-900 text-white border-gray-600' : 'bg-white text-black border-gray-300'} rounded-xl focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-gray-500' : 'focus:ring-blue-500'}`}
                 placeholder="Enter your message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -174,7 +187,7 @@ export default function Chatbot() {
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-gradient-to-br from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl hover:scale-105 transition-transform duration-300"
+                className={`px-4 py-2 rounded-xl hover:scale-105 transition-transform duration-300 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gradient-to-br from-blue-500 to-purple-500 text-white'}`}
               >
                 Send
               </button>
@@ -183,5 +196,6 @@ export default function Chatbot() {
         </div>
       )}
     </div>
+
   );
 }
