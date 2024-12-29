@@ -16,8 +16,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
 }) => {
   const [formData, setFormData] = useState<UserInfo>(userData);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [password, setPassword] = useState(userData.userPassword);
-  const [confirmPassword, setConfirmPassword] = useState(userData.userPassword);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [accessToken, setToken] = useState(localStorage.getItem("token"));
 
   const handleSave = async () => {
@@ -97,7 +97,12 @@ const EditProfile: React.FC<EditProfileProps> = ({
     try {
       const response = await axios.put(
         `http://localhost:4000/user/change-password/${userData.userId}`,
-        updatedPassword
+        updatedPassword,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       console.log("response:", response.data);
       onSave(response.data);
@@ -106,6 +111,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
         text: "Password updated successfully.",
         icon: "success",
       });
+      setConfirmPassword("");
+      setPassword("");
       onClose();
     } catch (error) {
       console.error("Failed to update password:", error);
