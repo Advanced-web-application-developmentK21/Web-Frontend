@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { UserInfo } from "../../types/type";
 import { title } from "process";
 import { useNavigate } from "react-router-dom";
+import { on } from "events";
 
 interface EditProfileProps {
   onClose: () => void;
@@ -19,13 +20,11 @@ const EditProfile: React.FC<EditProfileProps> = ({
   const [formData, setFormData] = useState<UserInfo>(userData);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const email = formData.userEmail;
-  const [title, setTitle] = useState("Update Profile");
-  //   const [password, setPassword] = useState("");
-  //   const [confirmPassword, setConfirmPassword] = useState("");
+  const [title, setTitle] = useState("profile");
   const [accessToken, setToken] = useState(localStorage.getItem("token"));
   const [code, setCode] = useState(Array(9).fill("")); // Initialize with 9 empty fields
   const [message, setMessage] = useState("");
-  const [step, setStep] = useState("code"); // Step can be 'code', or 'password'
+  const [step, setStep] = useState("profile"); // Step can be 'profile', 'code', or 'password'
   const [countdown, setCountdown] = useState(60); // Countdown in seconds
   const [isCountdownActive, setIsCountdownActive] = useState(false); // To track if countdown is active
   const navigate = useNavigate();
@@ -90,6 +89,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
     }
   };
   const handleSendCode = async (e: any) => {
+    setTitle("code");
     setShowChangePassword(!showChangePassword);
     e.preventDefault();
     try {
@@ -229,9 +229,13 @@ const EditProfile: React.FC<EditProfileProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="w-full max-w-2xl p-6 bg-[#e6f4f1] rounded-lg shadow-lg transform transition-all">
-        <h2 className="text-2xl text-center px-4 mb-6 py-2 rounded-lg font-bold text-white bg-[#008b8b]">
-          {title}
-        </h2>
+        <h1 className="text-3xl text-center px-4 mb-6 py-2 rounded-lg font-bold text-white bg-[#008b8b]">
+          {title === "code"
+            ? "Verify Code"
+            : title === "password"
+            ? "Reset Password"
+            : "Update Profile"}
+        </h1>
         {!showChangePassword ? (
           <div className="space-y-4">
             {/* Username */}
@@ -291,8 +295,8 @@ const EditProfile: React.FC<EditProfileProps> = ({
         ) : (
           <div>
             <div className="max-w-2xl w-full bg-white p-8 rounded-xl shadow-xl">
-              <h1 className="text-3xl font-bold text-center text-gray-800 mb-16">
-                Forgot Password
+              <h1 className="text-2xl font-bold text-center text-gray-800 mb-16">
+                {title === "code" ? "Enter your code" : "Enter new password"}
               </h1>
               {step === "code" ? (
                 <form onSubmit={handleCodeSubmit}>
@@ -326,6 +330,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
                     <button
                       type="submit"
                       className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300"
+                      onClick={() => setTitle("password")}
                     >
                       Verify Code
                     </button>
@@ -381,9 +386,16 @@ const EditProfile: React.FC<EditProfileProps> = ({
                   <button
                     type="button"
                     onClick={handleRetry}
-                    className="py-2 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-300"
+                    className="mx-3 py-2 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-300"
                   >
                     Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="mx-3 py-2 px-6 bg-slate-400 text-white rounded-lg hover:bg-slate-500 transition duration-300"
+                  >
+                    Cancel
                   </button>
                 </div>
               )}
