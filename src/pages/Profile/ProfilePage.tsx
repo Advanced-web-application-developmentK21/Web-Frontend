@@ -20,9 +20,9 @@ const ProFilePage: React.FC = () => {
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState<UserInfo>({
     userId: userId || "",
-    userName: localStorage.getItem("userName") || "",
-    userEmail: localStorage.getItem("userEmail") || "",
-    userPassword: localStorage.getItem("userPassword") || "", // Add a default or fetched value
+    userName: "",
+    userEmail: "",
+    userPassword: "", // Add a default or fetched value
     userGender: "Male", // Add a default or fetched value
   });
   const [toggleEditProfileModal, setToggleEditProfileModal] =
