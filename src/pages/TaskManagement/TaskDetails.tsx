@@ -27,12 +27,12 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [suggest_loading, setSuggestLoading] = useState(false);
   const [feedback, setFeedback] = useState<{
-      keyIssues: { title: string; content: string }[];
-    } | null>(null);
+    keyIssues: { title: string; content: string }[];
+  } | null>(null);
   const [SuggestModal, setSuggestModal] = useState(false);
   const { isDarkMode } = useTheme();
 
-  
+
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -47,14 +47,14 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   function calculateEstimateTime(startDate: string | Date, dueDate: string | Date): string {
     const start = new Date(startDate);
     const due = new Date(dueDate);
-  
+
     // Calculate the difference in milliseconds
     const diffMs = due.getTime() - start.getTime();
-  
+
     // Convert milliseconds to minutes and hours
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  
+
     // Decide whether to show in minutes or hours
     if (diffMinutes < 60) {
       return `${diffMinutes} minutes`;
@@ -62,7 +62,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       return `${diffHours} hours`;
     }
   }
-  
+
   const handleDateChange = (date: Date | null, field: string) => {
     // Ensure that startDate is a valid Date object
     if (editedTask.startDate && date) {
@@ -80,7 +80,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         });
       }
     }
-  };  
+  };
 
   const validateFields = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -101,7 +101,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         medium: "Medium",
         high: "High",
       };
-    
+
       const statusMap = {
         todo: "Todo",
         inprogress: "In Progress",
@@ -117,14 +117,20 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         startDate: editedTask.startDate,
         dueDate: editedTask.dueDate
       };
-    
+
 
       try {
         // API call to save the task
         const response = await axios.put(
           `http://localhost:4000/task/updateTasks/${task.id}`,
-          formattedData
+          formattedData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+            },
+          }
         );
+
         onSave(response.data); // Assuming the API returns the updated task
         Swal.fire({
           title: "Success!",
@@ -161,7 +167,15 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       if (result.isConfirmed) {
         try {
           // API call to delete the task
-          const response = await axios.delete(`http://localhost:4000/task/deleteTasks/${task.id}`);
+          const response = await axios.delete(
+            `http://localhost:4000/task/deleteTasks/${task.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+              },
+            }
+          );
+
           if (response.status === 200) {
             // Task deleted successfully
             Swal.fire({
@@ -185,9 +199,9 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         }
       }
     });
-  };  
+  };
 
-  function parseFeedback (feedbackText: string) {
+  function parseFeedback(feedbackText: string) {
     const lines = feedbackText.split("\n").filter(line => line.trim() !== "");
     const keyIssues = lines.map(line => {
       const match = line.match(/^\* \*\*(.+?):\*\*/); // Match lines starting with * **Title:**
@@ -203,18 +217,18 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         };
       }
     });
-  
+
     return { keyIssues };
   };
   const AI_Suggest = async () => {
     setSuggestLoading(true);
-    
+
     const priorityMap = {
       low: "Low",
       medium: "Medium",
       high: "High",
     };
-  
+
     const statusMap = {
       todo: "Todo",
       inprogress: "In Progress",
@@ -235,10 +249,18 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     //console.log(task);
 
     try {
-      const response = await axios.post(`http://localhost:4000/task/suggest`, {
-        curTask, Tasks
-      });
-
+      const response = await axios.post(
+        `http://localhost:4000/task/suggest`,
+        {
+          curTask,
+          Tasks
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+          },
+        }
+      );
 
       console.log('Frontend received data:', response.data.feedback);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
@@ -252,35 +274,31 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   };
 
   return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center  ${
-        isDarkMode ? "bg-black bg-opacity-50" 
-        : "bg-gray-800 bg-opacity-80"
-      }`}
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center  ${isDarkMode ? "bg-black bg-opacity-50"
+          : "bg-gray-800 bg-opacity-80"
+        }`}
     >
       <div
-        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${
-          isDarkMode ? "bg-[#545555FF]"
-          : "bg-[#e6f4f1]"
-        }`}
+        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${isDarkMode ? "bg-[#545555FF]"
+            : "bg-[#e6f4f1]"
+          }`}
         style={{ animation: "fadeIn 0.3s ease-in-out" }}
       >
-        <h2 
-          className={`text-2xl text-center px-4 mb-6 py-2 rounded-lg font-bold bg-[#008b8b] ${
-            isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-gray-800"
-            : "text-white"
-          }`}
+        <h2
+          className={`text-2xl text-center px-4 mb-6 py-2 rounded-lg font-bold bg-[#008b8b] ${isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-gray-800"
+              : "text-white"
+            }`}
         >
           Task Details
         </h2>
         <div className="space-y-5">
           {/* Task Title*/}
           <div>
-            <label 
-              className={`mb-1 block text-md font-medium ${
-                isDarkMode ? "text-white"
+            <label
+              className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                   : "text-gray-700"
-              }`}         
+                }`}
             >
               Task Title
             </label>
@@ -289,9 +307,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               name="title"
               value={editedTask.title}
               onChange={handleInputChange}
-              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${
-                errors.title ? "border-red-500" : ""
-              }`}
+              className={`input input-bordered w-full size-10 input-bordered border-2 rounded-md border-slate-200 p-2 ${errors.title ? "border-red-500" : ""
+                }`}
             />
             {errors.title && (
               <p className="text-red-500 text-md mt-1">{errors.title}</p>
@@ -300,11 +317,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           {/* Description */}
           <div>
-          <label 
-              className={`mb-1 block text-md font-medium ${
-                isDarkMode ? "text-white"
+            <label
+              className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                   : "text-gray-700"
-              }`}         
+                }`}
             >
               Description
             </label>
@@ -320,11 +336,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           <div className="flex space-x-4">
             {/* Priority */}
             <div className="w-full">
-              <label 
-                className={`mb-1 block text-md font-medium ${
-                  isDarkMode ? "text-white"
+              <label
+                className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                     : "text-gray-700"
-                }`}         
+                  }`}
               >
                 Priority
               </label>
@@ -346,11 +361,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
             {/* Status */}
             <div className="w-full">
-              <label 
-                className={`mb-1 block text-md font-medium ${
-                  isDarkMode ? "text-white"
+              <label
+                className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                     : "text-gray-700"
-                }`}         
+                  }`}
               >
                 Status
               </label>
@@ -370,11 +384,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           <div className="flex space-x-4">
             <div className="w-full">
-              <label 
-                className={`mb-1 block text-md font-medium ${
-                  isDarkMode ? "text-white"
+              <label
+                className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                     : "text-gray-700"
-                }`}         
+                  }`}
               >
                 Start Date
               </label>
@@ -419,11 +432,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               />
             </div>
             <div className="w-full">
-              <label 
-                className={`mb-1 block text-md font-medium ${
-                  isDarkMode ? "text-white"
+              <label
+                className={`mb-1 block text-md font-medium ${isDarkMode ? "text-white"
                     : "text-gray-700"
-                }`}         
+                  }`}
               >
                 Due Date
               </label>
@@ -505,18 +517,16 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
           <button
             onClick={onClose}
-            className={`btn btn-outline px-4 py-2 rounded-md font-medium ${
-              isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
-              : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
-            }`}
+            className={`btn btn-outline px-4 py-2 rounded-md font-medium ${isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
+                : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
+              }`}
             style={{ backgroundColor: "#95b0b0" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className={`btn btn-primary px-4 py-2 rounded-md font-medium ${
-              isDarkMode ? "bg-[#408E4BFF] hover:bg-[#15FF00FF] hover:text-gray-800 text-white"
+            className={`btn btn-primary px-4 py-2 rounded-md font-medium ${isDarkMode ? "bg-[#408E4BFF] hover:bg-[#15FF00FF] hover:text-gray-800 text-white"
                 : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-white"
               }`}
           >
@@ -524,10 +534,9 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           </button>
           <button
             onClick={handleDelete}
-            className={`btn btn-danger px-4 py-2 rounded-md text-white font-medium" ${
-              isDarkMode ? "bg-[#38C44BFFhover:bg-[#FF0000FF] hover:text-gray-800 text-white"
+            className={`btn btn-danger px-4 py-2 rounded-md text-white font-medium" ${isDarkMode ? "bg-[#38C44BFFhover:bg-[#FF0000FF] hover:text-gray-800 text-white"
                 : "bg-[#A36161FF] hover:bg-[#BC0F0FFF] text-white"
-            }`}
+              }`}
             style={{ backgroundColor: "#b74e4e" }}
           >
             Delete Task
@@ -542,7 +551,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             {feedback?.keyIssues.map((issue, index) => {
               // Check if the issue title is empty, if it is, return null for that iteration
               //if (!issue.title.trim()) return null;
-          
+
               // Return the JSX for non-empty issues
               return (
                 <div key={index}>
@@ -557,7 +566,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             })}
           </div>
         </div>
-      
+
       )}
     </div>
   );

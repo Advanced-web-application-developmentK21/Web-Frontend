@@ -29,6 +29,8 @@ const allViews = Object.keys(Views)
 
 
 export default function Schedule() {
+  const [accessToken, setToken] = useState(localStorage.getItem('token'));
+
   const [showModal, setShowModal] = useState(false);
   const [modalEvent, setModalEvent] = useState<Event | null>(null);
   const [showMoreModal, setShowMoreModal] = useState(false);
@@ -98,7 +100,15 @@ export default function Schedule() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
+        const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+        const response = await axios.get(
+          `http://localhost:4000/task/getOptionTasks/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Include the Bearer token in the header
+            },
+          }
+        );
         const fetchedEvents = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
@@ -182,11 +192,20 @@ export default function Schedule() {
 
     // Send the updated start, end dates and status to the backend
     try {
-      await axios.put(`http://localhost:4000/task/updateTasks/${event.id}`, {
-        status: newStatus,
-        startDate: newStartDate.toISOString(),
-        dueDate: newEndDate.toISOString(),
-      });
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:4000/task/updateTasks/${event.id}`,
+        {
+          status: newStatus,
+          startDate: newStartDate.toISOString(),
+          dueDate: newEndDate.toISOString(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the Bearer token in the header
+          },
+        }
+      );
 
       // Optionally, update the local event's status and dates
       const updatedEvent = updatedEvents.find((e) => e.id === event.id);
@@ -238,9 +257,9 @@ export default function Schedule() {
   const handleFocusTime = (event: Event) => {
     // Logic to edit event (e.g., open a form with pre-filled values)
     console.log("Focus Time event:", event);
-    
+
     if (event.status === "In Progress") {
-      navigate("/timer", {state: { schedule: event}});
+      navigate("/timer", { state: { schedule: event } });
     } else {
       Swal.fire({
         icon: "warning", // More suitable icon for break ending
@@ -254,7 +273,11 @@ export default function Schedule() {
   const handleDeleteEvent = (event: Event) => {
     // Logic to delete event
     axios
-      .delete(`http://localhost:4000/task/deleteTask/${event.id}`)
+      .delete(`http://localhost:4000/task/deleteTask/${event.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+        },
+      })
       .then(() => {
         // Remove event from the state after deletion
         setCalendarEvents(calendarEvents.filter((e) => e.id !== event.id));
@@ -263,6 +286,7 @@ export default function Schedule() {
       .catch((error) => {
         console.error("Error deleting event:", error);
       });
+
   };
 
   const handleAnalyze = async () => {
@@ -272,9 +296,15 @@ export default function Schedule() {
 
     console.log(error)
     try {
-      const response = await axios.post(`http://localhost:4000/task/analyze-schedule`, {
-        calendarEvents,
-      });
+      const response = await axios.post(
+        `http://localhost:4000/task/analyze-schedule`,
+        { calendarEvents },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+          },
+        }
+      );
 
       console.log(calendarEvents)
 
@@ -291,434 +321,449 @@ export default function Schedule() {
   };
 
   return (
-    <div 
-      className={`min-h-screen py-10 ${
-        isDarkMode ? "bg-gradient-to-r from-gray-600 to-gray-100"
+    <div
+      className={`min-h-screen py-10 ${isDarkMode ? "bg-gradient-to-r from-gray-600 to-gray-100"
         : "bg-gradient-to-r from-indigo-100 to-purple-100"
-      }`}
+        }`}
     >
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
         📅{" "}
-        <span 
-          className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 ${
-            isDarkMode ? "text-transparent bg-gradient-to-r from-red-600 to-red-800"
+        <span
+          className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 ${isDarkMode ? "text-transparent bg-gradient-to-r from-red-600 to-red-800"
             : "text-transparent bg-gradient-to-r from-indigo-500 to-purple-600"
-          }`}
+            }`}
         >
           Task Calendar
         </span>
       </h1>
-
-      <div className="flex items-center justify-between px-5 mb-6">
-        <div className="relative z-50 flex items-center space-x-3">
-          <label htmlFor="date-picker" 
-            className={`text-lg font-semibold ${
-              isDarkMode ? "text-white"
-              : "text-gray-700"
-            }`}
-          >
-            Select Month and Year:
-          </label>
-          <DatePicker
-            id="date-picker"
-            selected={currentDate}
-            onChange={handleDateChange}
-            dateFormat="MMMM yyyy"
-            showMonthYearPicker
-            className="p-3 border-2 border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
-          />
-          <button
-            onClick={handleAnalyze}
-            disabled={analyze_loading}
-            style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#007BFF',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: analyze_loading ? 'not-allowed' : 'pointer',
-            }
-            }>
-            {analyze_loading ? 'Analyzing...' : 'Analyze Schedule'}
-          </button>
-        </div>
-
-      </div>
-
-      {loading ? (
-        <div className="text-center text-gray-700">Loading events...</div>
-      ) : (
-        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
-          <DndProvider backend={HTML5Backend}>
-            <DragAndDropCalendar
-              localizer={localizer}
-              events={calendarEvents}
-              step={30}
-              views={allViews}
-              date={currentDate}
-              popup={false}
-              onNavigate={handleNavigate}
-              onEventDrop={({ event, start, end }) =>
-                handleEventDrop({
-                  event: event as Event,
-                  start,
-                  end,
-                })
-              }
-              onShowMore={(events) => handleShowMore(events as Event[])} // Update this to show more events
-              onDoubleClickEvent={handleEventDoubleClick}  // Double-click handler
-              style={{ height: 600, borderRadius: "12px", boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}
-            />
-          </DndProvider>
-        </div>
-      )}
-
-      {/* Show More Events Modal */}
-      {showMoreModal && showMoreEvents.length > 0 && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">All Events</h2>
-              <p className="text-sm text-gray-600">Here are all the events scheduled.</p>
-            </div>
-
-            <ul className="space-y-4">
-              {showMoreEvents.map((event, index) => (
-                <li
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200 transition"
-                >
-                  <span className="font-semibold text-gray-700 text-lg">{event.title}</span>
-                  <span className="text-xs text-gray-500">
-                    {moment(event.start).format("hh:mm A")} -{" "}
-                    {moment(event.end).format("hh:mm A")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
+      {!accessToken ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-100 to-blue-300 p-6">
+          <div className="text-center bg-white p-6 rounded-xl shadow-lg max-w-sm w-full transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <p className="text-xl text-red-600 font-semibold mb-4">
+              You must log in to access this page.
+            </p>
             <button
-              className="mt-6 w-full py-2 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:opacity-90 transition"
-              onClick={() => setShowMoreModal(false)}
+              onClick={() => window.location.href = '/auth'} // Redirect to the login page
+              className={`py-3 px-10 rounded-full text-lg font-semibold transition duration-300 ease-in-out transform ${isDarkMode ? 'bg-blue-700 text-white hover:bg-blue-800 hover:scale-105' : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'}`}
             >
-              Close
+              Log In
             </button>
           </div>
         </div>
 
-      )}
+      ) : (
+        <>
 
-      {showModal && modalEvent && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Icon */}
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+          <div className="flex items-center justify-between px-5 mb-6">
+            <div className="relative z-50 flex items-center space-x-3">
+              <label htmlFor="date-picker"
+                className={`text-lg font-semibold ${isDarkMode ? "text-white"
+                  : "text-gray-700"
+                  }`}
+              >
+                Select Month and Year:
+              </label>
+              <DatePicker
+                id="date-picker"
+                selected={currentDate}
+                onChange={handleDateChange}
+                dateFormat="MMMM yyyy"
+                showMonthYearPicker
+                className="p-3 border-2 border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
+              />
+              <button
+                onClick={handleAnalyze}
+                disabled={analyze_loading}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  backgroundColor: '#007BFF',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: analyze_loading ? 'not-allowed' : 'pointer',
+                }
+                }>
+                {analyze_loading ? 'Analyzing...' : 'Analyze Schedule'}
+              </button>
+            </div>
+
+          </div>
+
+          {loading ? (
+            <div className="text-center text-gray-700">Loading events...</div>
+          ) : (
+            <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+              <DndProvider backend={HTML5Backend}>
+                <DragAndDropCalendar
+                  localizer={localizer}
+                  events={calendarEvents}
+                  step={30}
+                  views={allViews}
+                  date={currentDate}
+                  popup={false}
+                  onNavigate={handleNavigate}
+                  onEventDrop={({ event, start, end }) =>
+                    handleEventDrop({
+                      event: event as Event,
+                      start,
+                      end,
+                    })
+                  }
+                  onShowMore={(events) => handleShowMore(events as Event[])} // Update this to show more events
+                  onDoubleClickEvent={handleEventDoubleClick}  // Double-click handler
+                  style={{ height: 600, borderRadius: "12px", boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}
+                />
+              </DndProvider>
+            </div>
+          )}
+
+          {/* Show More Events Modal */}
+          {showMoreModal && showMoreEvents.length > 0 && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in"
               onClick={() => setShowModal(false)}
             >
-              <IoClose size={30} />
-            </button>
-
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Event Details</h2>
-              <p className="text-lg text-gray-600">Here are the details of your event.</p>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Title:</p>
-                <p className="text-lg text-gray-600">{modalEvent.title}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Description:</p>
-                <p className="text-lg text-gray-600">{modalEvent.desc}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Time:</p>
-                <p className="text-lg text-gray-600">
-                  {moment(modalEvent.start).format("hh:mm A")} - {moment(modalEvent.end).format("hh:mm A")}
-                </p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Status:</p>
-                <p className="text-lg text-gray-600">{modalEvent.status}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Priority:</p>
-                <p className="text-lg text-gray-600">{modalEvent.priority}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="text-xl font-semibold text-gray-800">Estimated Time:</p>
-                <p className="text-lg text-gray-600">{modalEvent.estimatedTime}</p>
-              </div>
-            </div>
-
-            <div className="flex justify-between space-x-6 mb-6">
-              {/* Edit Button */}
-              <button
-                className="flex items-center justify-center w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg transition transform hover:scale-105"
-                onClick={() => handleEditEvent(modalEvent)}
+              <div
+                className="bg-white rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                <FaEdit className="mr-2" size={20} /> Edit Event
-              </button>
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">All Events</h2>
+                  <p className="text-sm text-gray-600">Here are all the events scheduled.</p>
+                </div>
 
-              {/* Delete Button */}
-              <button
-                className="flex items-center justify-center w-full py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transition transform hover:scale-105"
-                onClick={() => handleDeleteEvent(modalEvent)}
+                <ul className="space-y-4">
+                  {showMoreEvents.map((event, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200 transition"
+                    >
+                      <span className="font-semibold text-gray-700 text-lg">{event.title}</span>
+                      <span className="text-xs text-gray-500">
+                        {moment(event.start).format("hh:mm A")} -{" "}
+                        {moment(event.end).format("hh:mm A")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  className="mt-6 w-full py-2 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg shadow hover:opacity-90 transition"
+                  onClick={() => setShowMoreModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+          )}
+
+          {showModal && modalEvent && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
+              onClick={() => setShowModal(false)}
+            >
+              <div
+                className="bg-white rounded-lg shadow-2xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto relative"
+                onClick={(e) => e.stopPropagation()}
               >
-                <FaTrash className="mr-2" size={20} /> Delete Event
-              </button>
-            </div>
+                {/* Close Icon */}
+                <button
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+                  onClick={() => setShowModal(false)}
+                >
+                  <IoClose size={30} />
+                </button>
 
-            {/* Focus Time Button */}
-            <div className="mb-6">
-              <button
-                className="flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg transition transform hover:scale-105"
-                onClick={() => handleFocusTime(modalEvent)}
-              >
-                <FaRegClock className="mr-2" size={20} /> Focus Time
-              </button>
-            </div>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Event Details</h2>
+                  <p className="text-lg text-gray-600">Here are the details of your event.</p>
+                </div>
 
-          </div>
-        </div>
-      )}
-
-      {/* Show Feedback Modal */}
-      {FeedbackModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
-          onClick={() => setFeedbackModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
-              <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
-            </div>
-
-            <div className="space-y-6 mb-6">
-              {Feedback?.keyIssues.map((issue, index) => {
-
-
-                // Check if the issue title is empty, if it is return null for that iteration
-                if (!issue.title.trim()) return null;
-
-                // Check for specific titles and apply the custom box styling
-                if (issue.title.trim() === '**Warnings:**' || issue.title.trim() === '**Problems:**') {
-                  return (
-                    <div key={index} className="bg-yellow-50 p-4 rounded-lg shadow-md">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                        <FaExclamationTriangle className="text-yellow-500 mr-2" />
-                        <span className="text-yellow-500 mr-2">
-                          {issue.title.replace(/\*\*/g, '')}
-                        </span>
-                      </h3>
-
-                      {/* Iterate over each line of the content */}
-                      {issue.content.split('\n').map((line, lineIndex) => {
-                        // Clean the line by removing asterisks, stars, etc.
-                        const cleanLine = line
-                          .replace(/\*\*/g, '')  // Remove bold markers (**)
-                          .replace(/\*/g, '')    // Remove italic markers (*)
-                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                          .trim(); // Remove any extra leading/trailing whitespace
-
-                        const isBullet = cleanLine.startsWith('•');
-                        const isNumbered = /^\d+\./.test(cleanLine);
-
-                        return (
-                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
-                            {/* Handle bullets */}
-                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
-                            {/* Handle numbered list */}
-                            {!isNumbered && cleanLine && (
-                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
-                                {lineIndex + 1}.
-                              </span>
-                            )}
-
-                            {/* Display clean content */}
-                            <span>{cleanLine}</span>
-                          </p>
-                        );
-                      })}
-                    </div>
-                  );
-                } else if (issue.title.trim() === '**Prioritization Recommendations:**' || issue.title.trim() === '**Recommendations:**') {
-                  return (
-                    <div key={index} className="bg-blue-50 p-4 rounded-lg shadow-md">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                        <FaClipboardList className="text-blue-500 mr-2" />
-                        <span className="text-blue-500 mr-2">
-                          {issue.title.replace(/\*\*/g, '')}
-                        </span>
-                      </h3>
-                      {/* Iterate over each line of the content */}
-                      {issue.content.split('\n').map((line, lineIndex) => {
-                        // Clean the line by removing asterisks, stars, etc.
-                        const cleanLine = line
-                          .replace(/\*\*/g, '')  // Remove bold markers (**)
-                          .replace(/\*/g, '')    // Remove italic markers (*)
-                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                          .trim(); // Remove any extra leading/trailing whitespace
-
-                        const isBullet = cleanLine.startsWith('•');
-                        const isNumbered = /^\d+\./.test(cleanLine);
-
-                        return (
-                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
-                            {/* Handle bullets */}
-                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
-                            {/* Handle numbered list */}
-                            {!isNumbered && cleanLine && (
-                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
-                                {lineIndex + 1}.
-                              </span>
-                            )}
-
-                            {/* Display clean content */}
-                            <span>{cleanLine}</span>
-                          </p>
-                        );
-                      })}
-                    </div>
-                  );
-                } else if (issue.title.trim() === '**Simple Steps to Fix:**') {
-                  return (
-                    <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
-                        <FaCheckCircle className="text-green-500 mr-2" />
-                        <span className="text-green-500 mr-2">
-                          {issue.title.replace(/\*\*/g, '')}
-                        </span>
-                      </h3>
-                      {/* Iterate over each line of the content */}
-                      {issue.content.split('\n').map((line, lineIndex) => {
-                        // Clean the line by removing asterisks, stars, etc.
-                        const cleanLine = line
-                          .replace(/\*\*/g, '')  // Remove bold markers (**)
-                          .replace(/\*/g, '')    // Remove italic markers (*)
-                          .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                          .trim(); // Remove any extra leading/trailing whitespace
-
-                        const isBullet = cleanLine.startsWith('•');
-                        const isNumbered = /^\d+\./.test(cleanLine);
-
-                        return (
-                          <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
-                            {/* Handle bullets */}
-                            {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
-                            {/* Handle numbered list */}
-                            {!isNumbered && cleanLine && (
-                              <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
-                                {lineIndex + 1}.
-                              </span>
-                            )}
-
-                            {/* Display clean content */}
-                            <span>{cleanLine}</span>
-                          </p>
-                        );
-                      })}
-                    </div>
-                  );
-                } return (
-                  <div key={index}>
-                    {/* Render the title with or without bold markers */}
-                    <h3 style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#333' }}>
-                      {issue.title.replace(/\*\*/g, '')}
-                    </h3>
-
-                    <div style={{ paddingLeft: '1.5rem', lineHeight: '1.5' }}>
-                      {/* Check if the title is empty to avoid numbering content */}
-                      {issue.title.trim() !== "****" && (
-                        issue.content.split('\n').map((line, lineIndex) => {
-                          // Clean the line by removing asterisks, stars, etc.
-                          const cleanLine = line
-                            .replace(/\*\*/g, '')  // Remove bold markers (**)
-                            .replace(/\*/g, '')    // Remove italic markers (*)
-                            .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                            .trim(); // Remove any extra leading/trailing whitespace
-
-                          const isBullet = cleanLine.startsWith('•');
-                          const isNumbered = /^\d+\./.test(cleanLine);
-
-                          return (
-                            <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
-                              {/* Handle bullets */}
-                              {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
-
-                              {/* Handle numbered list but only if it doesn't already have numbering */}
-                              {!isNumbered && cleanLine && (
-                                <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
-                                  {lineIndex + 1}.
-                                </span>
-                              )}
-
-                              {/* Display clean content */}
-                              <span>{cleanLine}</span>
-                            </p>
-                          );
-                        })
-                      )}
-
-                      {/* If the title is empty, display the content without numbering */}
-                      {issue.title.trim() === "****" && (
-                        issue.content.split('\n').map((line, lineIndex) => {
-                          // Clean the line by removing asterisks, stars, etc.
-                          const cleanLine = line
-                            .replace(/\*\*/g, '')  // Remove bold markers (**)
-                            .replace(/\*/g, '')    // Remove italic markers (*)
-                            .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
-                            .trim(); // Remove any extra leading/trailing whitespace
-
-                          return (
-                            <span key={lineIndex}>{cleanLine}</span> // Render the cleaned line
-                          );
-                        })
-                      )}
-                    </div>
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Title:</p>
+                    <p className="text-lg text-gray-600">{modalEvent.title}</p>
                   </div>
-                );
-              })}
-            </div>
 
-            {/* Close Button*/}
-            <button
-              className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Description:</p>
+                    <p className="text-lg text-gray-600">{modalEvent.desc}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Time:</p>
+                    <p className="text-lg text-gray-600">
+                      {moment(modalEvent.start).format("hh:mm A")} - {moment(modalEvent.end).format("hh:mm A")}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Status:</p>
+                    <p className="text-lg text-gray-600">{modalEvent.status}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Priority:</p>
+                    <p className="text-lg text-gray-600">{modalEvent.priority}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-xl font-semibold text-gray-800">Estimated Time:</p>
+                    <p className="text-lg text-gray-600">{modalEvent.estimatedTime}</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between space-x-6 mb-6">
+                  {/* Edit Button */}
+                  <button
+                    className="flex items-center justify-center w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 hover:shadow-lg transition transform hover:scale-105"
+                    onClick={() => handleEditEvent(modalEvent)}
+                  >
+                    <FaEdit className="mr-2" size={20} /> Edit Event
+                  </button>
+
+                  {/* Delete Button */}
+                  <button
+                    className="flex items-center justify-center w-full py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 hover:shadow-lg transition transform hover:scale-105"
+                    onClick={() => handleDeleteEvent(modalEvent)}
+                  >
+                    <FaTrash className="mr-2" size={20} /> Delete Event
+                  </button>
+                </div>
+
+                {/* Focus Time Button */}
+                <div className="mb-6">
+                  <button
+                    className="flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 hover:shadow-lg transition transform hover:scale-105"
+                    onClick={() => handleFocusTime(modalEvent)}
+                  >
+                    <FaRegClock className="mr-2" size={20} /> Focus Time
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Show Feedback Modal */}
+          {FeedbackModal && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in"
               onClick={() => setFeedbackModal(false)}
             >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+              <div
+                className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
+                  <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
+                </div>
 
+                <div className="space-y-6 mb-6">
+                  {Feedback?.keyIssues.map((issue, index) => {
+
+
+                    // Check if the issue title is empty, if it is return null for that iteration
+                    if (!issue.title.trim()) return null;
+
+                    // Check for specific titles and apply the custom box styling
+                    if (issue.title.trim() === '**Warnings:**' || issue.title.trim() === '**Problems:**') {
+                      return (
+                        <div key={index} className="bg-yellow-50 p-4 rounded-lg shadow-md">
+                          <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                            <FaExclamationTriangle className="text-yellow-500 mr-2" />
+                            <span className="text-yellow-500 mr-2">
+                              {issue.title.replace(/\*\*/g, '')}
+                            </span>
+                          </h3>
+
+                          {/* Iterate over each line of the content */}
+                          {issue.content.split('\n').map((line, lineIndex) => {
+                            // Clean the line by removing asterisks, stars, etc.
+                            const cleanLine = line
+                              .replace(/\*\*/g, '')  // Remove bold markers (**)
+                              .replace(/\*/g, '')    // Remove italic markers (*)
+                              .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                              .trim(); // Remove any extra leading/trailing whitespace
+
+                            const isBullet = cleanLine.startsWith('•');
+                            const isNumbered = /^\d+\./.test(cleanLine);
+
+                            return (
+                              <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                                {/* Handle bullets */}
+                                {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+
+                                {/* Handle numbered list */}
+                                {!isNumbered && cleanLine && (
+                                  <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                    {lineIndex + 1}.
+                                  </span>
+                                )}
+
+                                {/* Display clean content */}
+                                <span>{cleanLine}</span>
+                              </p>
+                            );
+                          })}
+                        </div>
+                      );
+                    } else if (issue.title.trim() === '**Prioritization Recommendations:**' || issue.title.trim() === '**Recommendations:**') {
+                      return (
+                        <div key={index} className="bg-blue-50 p-4 rounded-lg shadow-md">
+                          <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                            <FaClipboardList className="text-blue-500 mr-2" />
+                            <span className="text-blue-500 mr-2">
+                              {issue.title.replace(/\*\*/g, '')}
+                            </span>
+                          </h3>
+                          {/* Iterate over each line of the content */}
+                          {issue.content.split('\n').map((line, lineIndex) => {
+                            // Clean the line by removing asterisks, stars, etc.
+                            const cleanLine = line
+                              .replace(/\*\*/g, '')  // Remove bold markers (**)
+                              .replace(/\*/g, '')    // Remove italic markers (*)
+                              .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                              .trim(); // Remove any extra leading/trailing whitespace
+
+                            const isBullet = cleanLine.startsWith('•');
+                            const isNumbered = /^\d+\./.test(cleanLine);
+
+                            return (
+                              <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                                {/* Handle bullets */}
+                                {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+
+                                {/* Handle numbered list */}
+                                {!isNumbered && cleanLine && (
+                                  <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                    {lineIndex + 1}.
+                                  </span>
+                                )}
+
+                                {/* Display clean content */}
+                                <span>{cleanLine}</span>
+                              </p>
+                            );
+                          })}
+                        </div>
+                      );
+                    } else if (issue.title.trim() === '**Simple Steps to Fix:**') {
+                      return (
+                        <div key={index} className="bg-green-50 p-4 rounded-lg shadow-md">
+                          <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                            <FaCheckCircle className="text-green-500 mr-2" />
+                            <span className="text-green-500 mr-2">
+                              {issue.title.replace(/\*\*/g, '')}
+                            </span>
+                          </h3>
+                          {/* Iterate over each line of the content */}
+                          {issue.content.split('\n').map((line, lineIndex) => {
+                            // Clean the line by removing asterisks, stars, etc.
+                            const cleanLine = line
+                              .replace(/\*\*/g, '')  // Remove bold markers (**)
+                              .replace(/\*/g, '')    // Remove italic markers (*)
+                              .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                              .trim(); // Remove any extra leading/trailing whitespace
+
+                            const isBullet = cleanLine.startsWith('•');
+                            const isNumbered = /^\d+\./.test(cleanLine);
+
+                            return (
+                              <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                                {/* Handle bullets */}
+                                {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+
+                                {/* Handle numbered list */}
+                                {!isNumbered && cleanLine && (
+                                  <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                    {lineIndex + 1}.
+                                  </span>
+                                )}
+
+                                {/* Display clean content */}
+                                <span>{cleanLine}</span>
+                              </p>
+                            );
+                          })}
+                        </div>
+                      );
+                    } return (
+                      <div key={index}>
+                        {/* Render the title with or without bold markers */}
+                        <h3 style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#333' }}>
+                          {issue.title.replace(/\*\*/g, '')}
+                        </h3>
+
+                        <div style={{ paddingLeft: '1.5rem', lineHeight: '1.5' }}>
+                          {/* Check if the title is empty to avoid numbering content */}
+                          {issue.title.trim() !== "****" && (
+                            issue.content.split('\n').map((line, lineIndex) => {
+                              // Clean the line by removing asterisks, stars, etc.
+                              const cleanLine = line
+                                .replace(/\*\*/g, '')  // Remove bold markers (**)
+                                .replace(/\*/g, '')    // Remove italic markers (*)
+                                .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                                .trim(); // Remove any extra leading/trailing whitespace
+
+                              const isBullet = cleanLine.startsWith('•');
+                              const isNumbered = /^\d+\./.test(cleanLine);
+
+                              return (
+                                <p key={lineIndex} style={{ margin: '0.5rem 0' }}>
+                                  {/* Handle bullets */}
+                                  {isBullet && <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>•</span>}
+
+                                  {/* Handle numbered list but only if it doesn't already have numbering */}
+                                  {!isNumbered && cleanLine && (
+                                    <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>
+                                      {lineIndex + 1}.
+                                    </span>
+                                  )}
+
+                                  {/* Display clean content */}
+                                  <span>{cleanLine}</span>
+                                </p>
+                              );
+                            })
+                          )}
+
+                          {/* If the title is empty, display the content without numbering */}
+                          {issue.title.trim() === "****" && (
+                            issue.content.split('\n').map((line, lineIndex) => {
+                              // Clean the line by removing asterisks, stars, etc.
+                              const cleanLine = line
+                                .replace(/\*\*/g, '')  // Remove bold markers (**)
+                                .replace(/\*/g, '')    // Remove italic markers (*)
+                                .replace(/^\*\*\*\*/g, '') // Remove four asterisks (****)
+                                .trim(); // Remove any extra leading/trailing whitespace
+
+                              return (
+                                <span key={lineIndex}>{cleanLine}</span> // Render the cleaned line
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Close Button*/}
+                <button
+                  className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
+                  onClick={() => setFeedbackModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

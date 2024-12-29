@@ -25,10 +25,18 @@ export default function Chatbot() {
       setIsTyping(true);
 
       try {
+        const token = localStorage.getItem("token");
+
         // Gửi câu hỏi đến API backend với userId trong URL
-        const response = await axios.post(`http://localhost:4000/task/chatbot-ask/${userId}`, {
-          question: inputValue.trim(),
-        });
+        const response = await axios.post(
+          `http://localhost:4000/task/chatbot-ask/${userId}`,
+          { question: inputValue.trim() },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Thêm Bearer Token
+            },
+          }
+        );
 
         // Kiểm tra xem phản hồi có chứa câu trả lời không
         if (response.data.message) {

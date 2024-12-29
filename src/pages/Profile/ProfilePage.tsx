@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { FaEnvelope, FaUser, FaLock, FaVenusMars, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext";
 
 const ProFilePage: React.FC = () => {
+  const [accessToken, setToken] = useState(localStorage.getItem('token'));
+   const { isDarkMode } = useTheme();
+
   const userId = localStorage.getItem("userId");
   const userName = localStorage.getItem("userName");
   const userEmail = localStorage.getItem("userEmail");
@@ -29,19 +33,17 @@ const ProFilePage: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-8">
       {/* Alert for unauthenticated access */}
       {showAlert && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm text-center">
-            <p className="text-lg font-semibold text-gray-800">
-              You need to log in to view your profile.
+        <div className="flex flex-col items-center justify-center min-h-screen p-6">
+          <div className="text-center bg-white p-6 rounded-xl shadow-lg max-w-sm w-full transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <p className="text-xl text-red-600 font-semibold mb-4">
+              You must log in to access this page.
             </p>
-            <div className="mt-4">
-              <button
-                onClick={handleAlertClose}
-                className="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300 ease-in-out"
-              >
-                OK
-              </button>
-            </div>
+            <button
+              onClick={() => window.location.href = '/auth'} // Redirect to the login page
+              className={`py-3 px-10 rounded-full text-lg font-semibold transition duration-300 ease-in-out transform ${isDarkMode ? 'bg-blue-700 text-white hover:bg-blue-800 hover:scale-105' : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'}`}
+            >
+              Log In
+            </button>
           </div>
         </div>
       )}

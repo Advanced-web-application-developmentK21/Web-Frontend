@@ -28,10 +28,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
 
   const [dateError, setDateError] = useState(true);
   const [suggest_loading, setSuggestLoading] = useState(false);
-    const [feedback, setFeedback] = useState<{
-        keyIssues: { title: string; content: string }[];
-      } | null>(null);
-    const [SuggestModal, setSuggestModal] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    keyIssues: { title: string; content: string }[];
+  } | null>(null);
+  const [SuggestModal, setSuggestModal] = useState(false);
 
   const userId = localStorage.getItem("userId");
   const { isDarkMode } = useTheme();
@@ -89,20 +89,20 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
       });
       return;
     }
-  
+
     const priorityMap = {
       low: "Low",
       medium: "Medium",
       high: "High",
     };
-  
+
     const statusMap = {
       todo: "Todo",
       inprogress: "In Progress",
       completed: "Completed",
       expired: "Expired",
     };
-  
+
     const formattedData = {
       name: taskData.title,
       description: taskData.description,
@@ -111,11 +111,19 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
       startDate: taskData.startDate ? taskData.startDate.toISOString() : new Date().toISOString(),
       dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : new Date().toISOString(),
     };
-  
+
     console.log(formattedData);
-  
+
     try {
-      const response = await axios.post(`http://localhost:4000/task/createTasks/${userId}`, formattedData);
+      const response = await axios.post(
+        `http://localhost:4000/task/createTasks/${userId}`,
+        formattedData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+          },
+        }
+      );
       Swal.fire({
         icon: "success",
         title: "Success",
@@ -125,7 +133,7 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         window.location.reload();
       });
       console.log(response.data);
-  
+
       setTaskData({
         id: "",
         title: "",
@@ -142,7 +150,7 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         error.response && error.response.data && error.response.data.message
           ? error.response.data.message
           : "Failed to add task. Please try again.";
-  
+
       console.error("Error creating task:", error);
       Swal.fire({
         icon: "error",
@@ -152,7 +160,7 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
     }
   };
 
-  function parseFeedback (feedbackText: string) {
+  function parseFeedback(feedbackText: string) {
     const lines = feedbackText.split("\n").filter(line => line.trim() !== "");
     const keyIssues = lines.map(line => {
       const match = line.match(/^\* \*\*(.+?):\*\*/); // Match lines starting with * **Title:**
@@ -168,18 +176,18 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         };
       }
     });
-  
+
     return { keyIssues };
   };
   const AI_Suggest = async () => {
     setSuggestLoading(true);
-    
+
     const priorityMap = {
       low: "Low",
       medium: "Medium",
       high: "High",
     };
-  
+
     const statusMap = {
       todo: "Todo",
       inprogress: "In Progress",
@@ -200,10 +208,18 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
     //console.log(task);
 
     try {
-      const response = await axios.post(`http://localhost:4000/task/suggest`, {
-        curTask, Tasks
-      });
-
+      const response = await axios.post(
+        `http://localhost:4000/task/suggest`,
+        {
+          curTask,
+          Tasks,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+          },
+        }
+      );
 
       console.log('Frontend received data:', response.data.feedback);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
@@ -217,17 +233,15 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
   };
 
   return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center  ${
-        isDarkMode ? "bg-black bg-opacity-50" 
-        : "bg-gray-800 bg-opacity-80"
-      }`}
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center  ${isDarkMode ? "bg-black bg-opacity-50"
+          : "bg-gray-800 bg-opacity-80"
+        }`}
     >
       <div
-        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${
-          isDarkMode ? "bg-[#545555FF]"
-          : "bg-[#e6f4f1]"
-        }`}
+        className={`w-full max-w-lg p-6 rounded-lg shadow-lg transform transition-all ${isDarkMode ? "bg-[#545555FF]"
+            : "bg-[#e6f4f1]"
+          }`}
         style={{ animation: "fadeIn 0.3s ease-in-out" }}
       >
         <div className="flex bg-[#008b8b] rounded-lg mb-6 items-center justify-center pt-3 pb-3">
@@ -280,11 +294,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
               fill="white"
             ></path>
           </svg>
-          <h2 
-            className={`text-2xl font-bold ${
-              isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-transparent bg-clip-text"
-              : "text-white"
-            }`}
+          <h2
+            className={`text-2xl font-bold ${isDarkMode ? "bg-gradient-to-br from-white via-yellow-300 to-yellow-600 text-transparent bg-clip-text"
+                : "text-white"
+              }`}
           >
             Create New Task
           </h2>
@@ -292,11 +305,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
 
         <div className="form-control mb-2 ">
           <label className="label ">
-            <span 
-              className={`label-text font-medium ${
-                isDarkMode ? "text-white"
-                : "text-black"
-              }`}
+            <span
+              className={`label-text font-medium ${isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
             >
               Task Title <span className="text-red-500">*</span>
             </span>
@@ -311,12 +323,11 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         </div>
         <div className="form-control mb-2 ">
           <label className="label ">
-          <span 
-            className={`label-text font-medium ${
-              isDarkMode ? "text-white"
-              : "text-black"
-            }`}
-          >
+            <span
+              className={`label-text font-medium ${isDarkMode ? "text-white"
+                  : "text-black"
+                }`}
+            >
               Description</span>
           </label>
           <input
@@ -330,12 +341,11 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         <div className="flex justify-between">
           <div className="mb-2 form-control">
             <label className="label">
-            <span 
-              className={`label-text font-medium ${
-                isDarkMode ? "text-white"
-                : "text-black"
-              }`}
-            >
+              <span
+                className={`label-text font-medium ${isDarkMode ? "text-white"
+                    : "text-black"
+                  }`}
+              >
                 Start Date <span className="text-red-500">*</span>
               </span>
             </label>
@@ -400,11 +410,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span 
-                className={`label-text font-medium ${
-                  isDarkMode ? "text-white"
-                  : "text-black"
-                }`}
+              <span
+                className={`label-text font-medium ${isDarkMode ? "text-white"
+                    : "text-black"
+                  }`}
               >
                 Due Date <span className="text-red-500">*</span>
               </span>
@@ -476,11 +485,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         <div className="flex justify-between  ">
           <div className="mb-2 form-control">
             <label className="label">
-              <span 
-                className={`label-text pr-1 font-medium ${
-                  isDarkMode ? "text-white"
-                  : "text-black"
-                }`}
+              <span
+                className={`label-text pr-1 font-medium ${isDarkMode ? "text-white"
+                    : "text-black"
+                  }`}
               >
                 Priority Level
               </span>
@@ -501,11 +509,10 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span 
-                className={`label-text pr-1 font-medium ${
-                  isDarkMode ? "text-white"
-                  : "text-black"
-                }`}
+              <span
+                className={`label-text pr-1 font-medium ${isDarkMode ? "text-white"
+                    : "text-black"
+                  }`}
               >
                 Status
               </span>
@@ -527,8 +534,7 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
 
           <div className="mb-2 form-control">
             <label className="label">
-              <span className={`label-text pr-1 font-medium ${
-                  isDarkMode ? "text-white"
+              <span className={`label-text pr-1 font-medium ${isDarkMode ? "text-white"
                   : "text-black"
                 }`}
               >
@@ -565,20 +571,18 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
           </button>
 
           <button
-            className={`btn btn-primary  px-5 py-2 rounded-xl  transition-all delay-50 mr-3 ${
-              isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
-              : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
-            }`}
+            className={`btn btn-primary  px-5 py-2 rounded-xl  transition-all delay-50 mr-3 ${isDarkMode ? "bg-[#234848FF] hover:bg-[#a5e4e4] hover:text-black text-white"
+                : "bg-[#95b0b0] hover:bg-[#a5e4e4] text-black"
+              }`}
             onClick={onClose}
           >
             Cancel
           </button>
-          
+
           <button
-            className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${
-            isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] hover:text-gray-800 text-white"
-              : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-black"
-            }`}
+            className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] hover:text-gray-800 text-white"
+                : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-black"
+              }`}
             onClick={handleSubmit}
           >
             Add Task
@@ -597,9 +601,9 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
                   <span style={{ fontWeight: 'bold', fontSize: '1rem', color: '#333' }}>
                     {issue.title.replace(/\*\*/g, '')}
                   </span>
-                  
+
                   <span style={{ fontSize: '1rem', color: '#333' }}>
-                      {issue.content}
+                    {issue.content}
                   </span>
                 </div>
               );

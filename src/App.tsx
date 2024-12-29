@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import Auth from './pages/Auth/Auth';
 import GoogleLoginSuccess from './pages/GoogleLoginSuccess/GoogleLoginSuccess';
-import PrivateRoute from './components/PrivateRoute';
 import UserLayout from './layout/UserLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Schedule from './pages/Schedule/SchedulePage';
@@ -41,11 +40,9 @@ function App() {
               key={path}
               path={path}
               element={
-                <PrivateRoute>
                   <UserLayout>
                     {component}
                   </UserLayout>
-                </PrivateRoute>
               }
             />
           ))}
