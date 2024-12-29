@@ -251,6 +251,12 @@ export default function Schedule() {
   const handleEditEvent = (event: Event) => {
     // Logic to edit event (e.g., open a form with pre-filled values)
     console.log("Editing event:", event);
+
+    navigate("/tasks", { state: { schedule: event } });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setCalendarEvents((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   };
 
   const navigate = useNavigate();
@@ -271,22 +277,46 @@ export default function Schedule() {
   };
 
   const handleDeleteEvent = (event: Event) => {
-    // Logic to delete event
-    axios
-      .delete(`http://localhost:4000/task/deleteTask/${event.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
-        },
-      })
-      .then(() => {
-        // Remove event from the state after deletion
-        setCalendarEvents(calendarEvents.filter((e) => e.id !== event.id));
-        setShowModal(false); // Close the modal
-      })
-      .catch((error) => {
-        console.error("Error deleting event:", error);
-      });
-
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, keep it",
+      reverseButtons: true,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // API call to delete the task
+          const response = await axios.delete(`http://localhost:4000/task/deleteTasks/${event.id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`, // Include Bearer token
+            },
+          });
+          if (response.status === 200) {
+            // Task deleted successfully
+            Swal.fire({
+              title: "Deleted!",
+              text: "The task has been deleted.",
+              icon: "success",
+              confirmButtonText: "OK",
+            }).then(() => {
+              handleDeleteTask(event.id); // Update state or UI after deletion
+              setShowModal(false); // Close the modal or dialog
+            });
+          }
+        } catch (error: any) {
+          console.error("Failed to delete task:", error);
+          Swal.fire({
+            title: "Error!",
+            text: error.response?.data?.message || "Something went wrong.",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+        }
+      }
+    });
   };
 
   const handleAnalyze = async () => {
@@ -323,14 +353,14 @@ export default function Schedule() {
   return (
     <div
       className={`min-h-screen py-10 ${isDarkMode ? "bg-gradient-to-r from-gray-600 to-gray-100"
-        : "bg-gradient-to-r from-indigo-100 to-purple-100"
+          : "bg-gradient-to-r from-indigo-100 to-purple-100"
         }`}
     >
       <h1 className="text-5xl font-extrabold text-center mb-12 text-gray-800">
         📅{" "}
         <span
           className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600 ${isDarkMode ? "text-transparent bg-gradient-to-r from-red-600 to-red-800"
-            : "text-transparent bg-gradient-to-r from-indigo-500 to-purple-600"
+              : "text-transparent bg-gradient-to-r from-indigo-500 to-purple-600"
             }`}
         >
           Task Calendar
@@ -358,7 +388,7 @@ export default function Schedule() {
             <div className="relative z-50 flex items-center space-x-3">
               <label htmlFor="date-picker"
                 className={`text-lg font-semibold ${isDarkMode ? "text-white"
-                  : "text-gray-700"
+                    : "text-gray-700"
                   }`}
               >
                 Select Month and Year:
@@ -374,11 +404,12 @@ export default function Schedule() {
               <button
                 onClick={handleAnalyze}
                 disabled={analyze_loading}
+                className={` ${isDarkMode ? "bg-[#00FF2FFF] text-[#000000FF]"
+                    : "bg-[#007BFF] text-[#FFFFFFFF]"
+                  }`}
                 style={{
                   padding: '10px 20px',
                   fontSize: '16px',
-                  backgroundColor: '#007BFF',
-                  color: '#fff',
                   border: 'none',
                   borderRadius: '5px',
                   cursor: analyze_loading ? 'not-allowed' : 'pointer',
@@ -425,11 +456,20 @@ export default function Schedule() {
               onClick={() => setShowModal(false)}
             >
               <div
-                className="bg-white rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto"
+                className={`rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto ${isDarkMode ? "bg-[#FFFFFFFF]"
+                    : "bg-[#000000FF]"
+                  }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">All Events</h2>
+                  <h2
+                    className={`}text-2xl font-bold mb-4 ${isDarkMode ? "bg-gradient-to-br from-black via-red-300 to-red-600 text-transparent bg-clip-text"
+                        : "text-gray-800"
+                      }`}
+                  >
+                    All Events
+                  </h2>
+
                   <p className="text-sm text-gray-600">Here are all the events scheduled.</p>
                 </div>
 
@@ -477,7 +517,13 @@ export default function Schedule() {
                 </button>
 
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-extrabold text-gray-800 mb-4">Event Details</h2>
+                  <h2
+                    className={`text-3xl font-extrabold mb-4 ${isDarkMode ? "bg-gradient-to-br from-blue via-red-300 to-blue-600 text-transparent bg-clip-text"
+                        : "text-gray-800"
+                      }`}
+                  >
+                    Event Details
+                  </h2>
                   <p className="text-lg text-gray-600">Here are the details of your event.</p>
                 </div>
 
@@ -554,12 +600,26 @@ export default function Schedule() {
               onClick={() => setFeedbackModal(false)}
             >
               <div
-                className="bg-white rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto"
+                className={`rounded-lg shadow-xl p-8 w-11/12 md:w-2/3 lg:w-1/2 transform transition-all scale-95 max-h-full overflow-y-auto ${isDarkMode ? "bg-[#A28D9FFF]"
+                    : "bg-white"
+                  }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-extrabold text-gray-800 mb-4">AI Feedback</h2>
-                  <p className="text-lg text-gray-600">Here are the feedback about your schedules.</p>
+                  <h2
+                    className={`text-3xl font-extrabold text-gray-800 mb-4 ${isDarkMode ? "bg-gradient-to-br from-red via-green-300 to-blue-600 text-transparent bg-clip-text"
+                        : "text-gray-800"
+                      }`}
+                  >
+                    AI Feedback
+                  </h2>
+                  <p
+                    className={`text-lg ${isDarkMode ? "text-white"
+                        : "text-gray-600"
+                      }`}
+                  >
+                    Here are the feedback about your schedules.
+                  </p>
                 </div>
 
                 <div className="space-y-6 mb-6">
@@ -754,7 +814,9 @@ export default function Schedule() {
 
                 {/* Close Button*/}
                 <button
-                  className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg shadow-lg hover:bg-gray-300 transition"
+                  className={`w-full py-3 rounded-lg shadow-lg hover:bg-gray-300 transition ${isDarkMode ? "bg-[#B56B64FF] text-white hover:bg-[#F66C5FFF]"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   onClick={() => setFeedbackModal(false)}
                 >
                   Close
