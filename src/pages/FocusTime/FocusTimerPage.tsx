@@ -208,6 +208,7 @@ function FocusTimer() {
     setTimeLeft(0);
     setIsBreak(false);
     setIsTimerRunning(false);
+    setIsPaused(false)
   };
 
   // Cleanup when the session ends
