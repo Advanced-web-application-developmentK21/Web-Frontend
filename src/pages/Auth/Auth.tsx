@@ -19,7 +19,8 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSignUp = async () => {
-    try {
+    navigate("/verify-email", { state: formData });
+    /*try {
       const response = await axios.post(`http://localhost:4000/user/register`, {
         username: formData.username,
         email: formData.email,
@@ -55,7 +56,7 @@ const Auth: React.FC = () => {
         title: "Sign Up Failed",
         text: errorMessage,
       });
-    }
+    }*/
   };
 
   const handleSignIn = async () => {
