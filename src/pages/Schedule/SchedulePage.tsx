@@ -456,15 +456,15 @@ export default function Schedule() {
               onClick={() => setShowModal(false)}
             >
               <div
-                className={`rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto ${isDarkMode ? "bg-[#FFFFFFFF]"
-                    : "bg-[#000000FF]"
+                className={`rounded-xl shadow-2xl p-6 w-11/12 md:w-1/2 lg:w-1/3 transform transition-all scale-95 max-h-full overflow-y-auto ${isDarkMode ? "bg-[#000000FF]"
+                    : "bg-[#FFFFFFFF]"
                   }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center mb-6">
                   <h2
-                    className={`}text-2xl font-bold mb-4 ${isDarkMode ? "bg-gradient-to-br from-black via-red-300 to-red-600 text-transparent bg-clip-text"
-                        : "text-gray-800"
+                    className={`}text-2xl font-bold mb-4 ${isDarkMode ? "text-gray-800"
+                        : "bg-gradient-to-br from-black via-red-300 to-red-600 text-transparent bg-clip-text"
                       }`}
                   >
                     All Events
