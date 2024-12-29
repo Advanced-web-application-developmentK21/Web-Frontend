@@ -564,8 +564,11 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
           <button
             onClick={AI_Suggest}
             disabled={suggest_loading}
-            className="btn btn-outline px-2 py-2 rounded-md text-blue font-medium top-right-10"
-            style={{ backgroundColor: "#9ADAACFF" }}
+            className={`btn btn-outline px-2 py-2 rounded-md font-medium ${
+              isDarkMode ? "bg-[#2A9E4BFF] text-blue hover:bg-[#00FFC3FF] hover:text-gray-800"
+              : "bg-[#9ADAACFF] text-blue hover:bg-[#00FF48FF] hover:text-white"
+            }`}
+            style={{ marginRight: "10px" }}
           >
             {suggest_loading ? 'Analyzing...' : 'AI suggest'}
           </button>
@@ -580,7 +583,8 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
           </button>
 
           <button
-            className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] hover:text-gray-800 text-white"
+            className={`btn btn-primary  px-5 py-2 rounded-xl transition-all delay-50 text-weight-bold ${
+                isDarkMode ? "bg-[#4F39CAFF] hover:bg-[#2904FBFF] text-white"
                 : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-black"
               }`}
             onClick={handleSubmit}

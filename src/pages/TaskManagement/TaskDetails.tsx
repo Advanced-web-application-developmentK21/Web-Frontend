@@ -487,7 +487,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           ) : null}
           {/* Estimate Time */}
           <div className="flex mt-3">
-            <label className="block text-md font-medium text-gray-700 mr-4">
+            <label className={`block text-md font-medium mr-4 ${
+              isDarkMode ? "text-white"
+              : "text-gray-700"
+            }`}>
               Estimated Time:
             </label>
             <div className="w-fit bg-rose-300 rounded-md pl-4 pr-4">
@@ -509,8 +512,10 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           <button
             onClick={AI_Suggest}
             disabled={suggest_loading}
-            className="btn btn-outline px-2 py-2 rounded-md text-blue font-medium"
-            style={{ backgroundColor: "#9ADAACFF" }}
+            className={`btn btn-outline px-2 py-2 rounded-md font-medium ${
+              isDarkMode ? "bg-[#2A9E4BFF] text-blue hover:bg-[#00FFC3FF] hover:text-gray-800"
+              : "bg-[#9ADAACFF] text-blue hover:bg-[#00FF48FF] hover:text-white"
+            }`}
           >
             {suggest_loading ? 'Analyzing...' : 'AI suggest'}
           </button>
@@ -526,18 +531,19 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
           </button>
           <button
             onClick={handleSave}
-            className={`btn btn-primary px-4 py-2 rounded-md font-medium ${isDarkMode ? "bg-[#408E4BFF] hover:bg-[#15FF00FF] hover:text-gray-800 text-white"
-                : "bbg-[#AEEEEE] hover:bg-[#a5e4e4] text-white"
+            className={`btn btn-primary px-4 py-2 rounded-md font-medium ${
+                isDarkMode ? "bg-[#408E4BFF] hover:bg-[#15FF00FF] hover:text-gray-800 text-white"
+                : "bg-[#00FFFFFF] text-black hover:bg-[#0066FFFF] hover:text-white"
               }`}
           >
             Save Changes
           </button>
           <button
             onClick={handleDelete}
-            className={`btn btn-danger px-4 py-2 rounded-md text-white font-medium" ${isDarkMode ? "bg-[#38C44BFFhover:bg-[#FF0000FF] hover:text-gray-800 text-white"
-                : "bg-[#A36161FF] hover:bg-[#BC0F0FFF] text-white"
+            className={`btn btn-danger px-4 py-2 rounded-md text-white font-medium" ${
+              isDarkMode ? "bg-[#AB0000FF] hover:bg-[#FF0000FF] hover:text-gray-800 text-white"
+                : "bg-[#875656FF] hover:bg-[#FF0000FF] text-white"
               }`}
-            style={{ backgroundColor: "#b74e4e" }}
           >
             Delete Task
           </button>
