@@ -66,10 +66,10 @@ const Auth: React.FC = () => {
       });
 
       if (response.status === 200) {
-        const { user_id, user_name, user_email, user_password, user_created_at, access_token } = response.data;
+        const { user_id, user_name, access_token } = response.data;
 
         // Update login with all data
-        login(user_id, user_name, user_email, user_password, user_created_at, access_token);
+        login(user_id, user_name, access_token);
 
         Swal.fire({
           icon: 'success',
