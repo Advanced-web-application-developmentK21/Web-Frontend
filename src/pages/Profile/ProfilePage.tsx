@@ -23,7 +23,6 @@ const ProFilePage: React.FC = () => {
     userName: "",
     userEmail: "",
     userPassword: "", // Add a default or fetched value
-    userGender: "Male", // Add a default or fetched value
   });
   const [toggleEditProfileModal, setToggleEditProfileModal] =
     useState<boolean>(false);
@@ -53,7 +52,6 @@ const ProFilePage: React.FC = () => {
           userName: response.data.data.username,
           userEmail: response.data.data.email,
           userPassword: userDetails.userPassword,
-          userGender: userDetails.userGender,
         });
         console.log("userId:", userDetails.userName);
       } catch (error) {
@@ -99,7 +97,6 @@ const ProFilePage: React.FC = () => {
         userName: response.data.data.username,
         userEmail: response.data.data.email,
         userPassword: userDetails.userPassword,
-        userGender: userDetails.userGender,
       });
     } catch (error) {
       console.error("Failed to fetch updated user data:", error);
@@ -181,15 +178,6 @@ const ProFilePage: React.FC = () => {
                 </p>
               </div>
               {/* Gender */}
-              <div className="flex items-center space-x-4">
-                <FaVenusMars className="text-indigo-600 text-2xl" />
-                <p className="text-lg">
-                  Gender:{" "}
-                  <span className="text-gray-600">
-                    {userDetails.userGender}
-                  </span>
-                </p>
-              </div>
             </div>
           </div>
         </div>
