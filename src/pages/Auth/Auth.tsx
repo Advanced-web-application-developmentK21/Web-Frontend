@@ -158,6 +158,11 @@ const Auth: React.FC = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
+  };
+
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 flex justify-center items-center">
       <div className="max-w-4xl w-full bg-white shadow-xl rounded-lg flex flex-col lg:flex-row">
@@ -237,21 +242,30 @@ const Auth: React.FC = () => {
                 {isSignUp ? "Sign Up" : "Sign In"}
               </button>
               {!isSignUp && (
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  className="w-full flex items-center justify-center py-3 mt-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
-                >
-                  <img
-                    src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
-                    alt="Google Logo"
-                    className="w-5 h-5 mr-3"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Continue with Google</span>
-                </button>
+                <div className="relative mt-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="w-full flex items-center justify-center py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                  >
+                    <img
+                      src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png"
+                      alt="Google Logo"
+                      className="w-5 h-5 mr-3"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Continue with Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="absolute right-0 text-indigo-600 font-medium text-sm mt-2 hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               )}
             </form>
-            <p className="text-gray-600 mt-6">
+            <p className="text-gray-600 mt-16">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
               <button
                 type="button"
@@ -274,6 +288,8 @@ const Auth: React.FC = () => {
         </div>
       </div>
     </div>
+
+
   );
 };
 
