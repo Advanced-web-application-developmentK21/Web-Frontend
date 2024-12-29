@@ -18,10 +18,17 @@ export interface Task {
   dueDate: Date | null; // ISO string for simplicity
   priority: "low" | "medium" | "high";
   status: "todo" | "expired" | "inprogress" | "completed";
-  estimateTime: number
+  estimateTime: number;
 }
 
 export interface TaskCategory {
   name: string;
   tasks: Task[];
+}
+export interface UserInfo {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userPassword: string;
+  userGender: string;
 }
