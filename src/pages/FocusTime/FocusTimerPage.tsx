@@ -13,6 +13,8 @@ import { useTheme } from "../../context/ThemeContext";
 
 function FocusTimer() {
   const { isDarkMode } = useTheme();
+    const [accessToken, setToken] = useState(localStorage.getItem('token'));
+
   const [Tasks, setTasks] = useState<Event[]>([]); // Array of tasks
   const [Cur_Task, setCur_Task] = useState<Event | null>(null);
   const [task, setTask] = useState<string>(""); // Selected task title
@@ -33,7 +35,15 @@ function FocusTimer() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/task/getOptionTasks/${userId}`);
+        const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+        const response = await axios.get(
+          `http://localhost:4000/task/getOptionTasks/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Include the Bearer token in the header
+            },
+          }
+        );
         const fetchedEvents: Event[] = response.data.data.map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
@@ -221,11 +231,21 @@ function FocusTimer() {
     const newEndDate = new Date(Date.now() - 1000); // Subtract 1000 ms (1 second)
 
     try {
-      await axios.put(`http://localhost:4000/task/updateTasks/${Cur_Task.id}`, {
-        status: newStatus,
-        startDate: Cur_Task.start,
-        dueDate: newEndDate.toISOString(),
-      });
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `http://localhost:4000/task/updateTasks/${Cur_Task.id}`,
+        {
+          status: newStatus,
+          startDate: Cur_Task.start,
+          dueDate: newEndDate.toISOString(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the Bearer token in the header
+          },
+        }
+      );
 
       // Optionally, update the local event's status and dates
       const updatedEvent = Tasks.find((e) => e.id === Cur_Task.id);
@@ -273,215 +293,232 @@ function FocusTimer() {
           FOCUS TIMER
         </span>
       </h1>
-
-      <div className="task-controls space-y-8">
-        <table className="w-full">
-          <tbody>
-            {/* Select Task Row */}
-            <tr>
-              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Select Task</td>
-              <td>
-                <select
-                  value={task}
-                  onChange={(e) => {
-                    const selectedTask = Tasks.find((t) => t.title === e.target.value);
-                    console.log("Selected task's info: ", selectedTask);
-
-                    if (selectedTask && selectedTask.status === "In Progress") {
-                      setTask(e.target.value);
-                      setCur_Task(selectedTask);
-                    } else {
-                      Swal.fire({
-                        icon: "error",
-                        title: "Task status is invalid!",
-                        html: "Please change the task status to <b>In Progress</b> first!",
-                        confirmButtonText: "OK",
-                      });
-                    }
-                  }}
-                  disabled={isRunning}
-                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
-                    ? "bg-gray-800 text-gray-300 border-gray-600"
-                    : "bg-white text-gray-900 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
-                >
-                  <option value="">Select an Existing Task</option>
-                  {Tasks.map((t) => (
-                    <option key={t.id} value={t.title}>
-                      {t.title}
-                    </option>
-                  ))}
-                </select>
-              </td>
-            </tr>
-
-            {/* Number of Sessions Row */}
-            <tr>
-              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Number of Sessions</td>
-              <td>
-                <input
-                  type="number"
-                  placeholder="Number of Sessions"
-                  value={session}
-                  onInput={(e) => {
-                    const value = e.currentTarget.value;
-                    if (/^\d+$/.test(value)) {
-                      setSession(Number(value));
-                    } else {
-                      e.currentTarget.value = session.toString();
-                    }
-                  }}
-                  min="1"
-                  step="1"
-                  disabled={isRunning}
-                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
-                    ? "bg-gray-800 text-gray-300 border-gray-600"
-                    : "bg-white text-gray-900 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
-                />
-              </td>
-            </tr>
-
-            {/* Session Duration Row */}
-            <tr>
-              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Session Duration (minutes)</td>
-              <td>
-                <input
-                  type="number"
-                  placeholder="Work Duration"
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                  min="1"
-                  disabled={isRunning}
-                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
-                    ? "bg-gray-800 text-gray-300 border-gray-600"
-                    : "bg-white text-gray-900 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
-                />
-              </td>
-            </tr>
-
-            {/* Break Duration Row */}
-            <tr>
-              <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Break Duration (minutes)</td>
-              <td>
-                <input
-                  type="number"
-                  placeholder="Break Duration"
-                  value={breakDuration}
-                  onChange={(e) => setBreakDuration(Number(e.target.value))}
-                  min="1"
-                  disabled={isRunning}
-                  className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
-                    ? "bg-gray-800 text-gray-300 border-gray-600"
-                    : "bg-white text-gray-900 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-600`}
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Control Buttons */}
-        <div className="control-buttons flex justify-center space-x-8 mt-8">
-          <button
-            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
-              ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
-              : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:from-blue-600 hover:to-blue-800"
-              }`}
-            onClick={startTimer}
-            disabled={isRunning}
-          >
-            <FaPlay className="mr-2 text-xl" /> Start
-          </button>
-          <button
-            className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300  ${
-              isPaused ? `${isDarkMode
-                ? "bg-gradient-to-r from-green-600 to-green-800 text-white hover:from-green-700 hover:to-green-900"
-                : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:from-green-600 hover:to-green-800"
-                }`
-              : `${isDarkMode
-                ? "bg-gradient-to-r from-red-600 to-red-800 text-white hover:from-red-700 hover:to-red-900"
-                : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
-                }`
-            }`}
-            onClick={stopTimer}
-            disabled={!isRunning}
-          >
-            <FaStop className="mr-2 text-xl" /> {isPaused ? "Continue" : "Stop"}
-          </button>
-        </div>
-
-
-        {/* Reset Button */}
-        <div className="text-center mt-4">
-          <button
-            className={`px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
-              ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              : "bg-[#000000FF] text-white hover:bg-[#433534FF]"
-              }`} onClick={resetTimer}
-          >
-            <FaRedo className="mr-2 inline text-lg" /> Reset
-          </button>
-        </div>
-      </div>
-
-      {/* Task Information */}
-      <div
-        className={`task-info mt-12 text-center ${isDarkMode ? "text-emerald-800" : "text-slate-900"
-          }`}
-      >
-        <h2 className={`text-2xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
-          {task || "No task selected"}
-        </h2>
-        <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
-          {Cur_Task?.start
-            ? `From ${new Date(Cur_Task.start).toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            })} ${new Date(Cur_Task.start).toLocaleTimeString("en-US", {
-              hour12: false,
-            })}`
-            : ""}
-        </h3>
-
-        <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
-          {Cur_Task?.end
-            ? `To ${new Date(Cur_Task.end).toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-            })} ${new Date(Cur_Task.end).toLocaleTimeString("en-US", {
-              hour12: false,
-            })}`
-            : ""}
-        </h3>
-
-        <h4 className={`text-xl font-semibold mt-4 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
-          {isBreak ? "Break Time" : "Work Time"} -{" "}
-          {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
-        </h4>
-
-        {isRunning && (
-          <div className="timer-bar mt-6">
-            <div
-              className={`timer-progress rounded-full ${isDarkMode
-                ? "bg-gradient-to-r from-green-500 to-blue-600"
-                : "bg-gradient-to-r from-green-400 to-blue-500"
-                }`}
-              style={{
-                width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
-                  ((isBreak ? breakDuration : duration) * 60) *
-                  100}%`,
-              }}
-            />
+      {!accessToken ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-100 to-blue-300 p-6">
+          <div className="text-center bg-white p-6 rounded-xl shadow-lg max-w-sm w-full transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <p className="text-xl text-red-600 font-semibold mb-4">
+              You must log in to access this page.
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth'} // Redirect to the login page
+              className={`py-3 px-10 rounded-full text-lg font-semibold transition duration-300 ease-in-out transform ${isDarkMode ? 'bg-blue-700 text-white hover:bg-blue-800 hover:scale-105' : 'bg-blue-500 text-white hover:bg-blue-600 hover:scale-105'}`}
+            >
+              Log In
+            </button>
           </div>
-        )}
-      </div>
+        </div>
 
+      ) : (
+        <>
+
+          <div className="task-controls space-y-8">
+            <table className="w-full">
+              <tbody>
+                {/* Select Task Row */}
+                <tr>
+                  <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Select Task</td>
+                  <td>
+                    <select
+                      value={task}
+                      onChange={(e) => {
+                        const selectedTask = Tasks.find((t) => t.title === e.target.value);
+                        console.log("Selected task's info: ", selectedTask);
+
+                        if (selectedTask && selectedTask.status === "In Progress") {
+                          setTask(e.target.value);
+                          setCur_Task(selectedTask);
+                        } else {
+                          Swal.fire({
+                            icon: "error",
+                            title: "Task status is invalid!",
+                            html: "Please change the task status to <b>In Progress</b> first!",
+                            confirmButtonText: "OK",
+                          });
+                        }
+                      }}
+                      disabled={isRunning}
+                      className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                        ? "bg-gray-800 text-gray-300 border-gray-600"
+                        : "bg-white text-gray-900 border-gray-300"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
+                    >
+                      <option value="">Select an Existing Task</option>
+                      {Tasks.map((t) => (
+                        <option key={t.id} value={t.title}>
+                          {t.title}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+
+                {/* Number of Sessions Row */}
+                <tr>
+                  <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Number of Sessions</td>
+                  <td>
+                    <input
+                      type="number"
+                      placeholder="Number of Sessions"
+                      value={session}
+                      onInput={(e) => {
+                        const value = e.currentTarget.value;
+                        if (/^\d+$/.test(value)) {
+                          setSession(Number(value));
+                        } else {
+                          e.currentTarget.value = session.toString();
+                        }
+                      }}
+                      min="1"
+                      step="1"
+                      disabled={isRunning}
+                      className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                        ? "bg-gray-800 text-gray-300 border-gray-600"
+                        : "bg-white text-gray-900 border-gray-300"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
+                    />
+                  </td>
+                </tr>
+
+                {/* Session Duration Row */}
+                <tr>
+                  <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Session Duration (minutes)</td>
+                  <td>
+                    <input
+                      type="number"
+                      placeholder="Work Duration"
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      min="1"
+                      disabled={isRunning}
+                      className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                        ? "bg-gray-800 text-gray-300 border-gray-600"
+                        : "bg-white text-gray-900 border-gray-300"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
+                    />
+                  </td>
+                </tr>
+
+                {/* Break Duration Row */}
+                <tr>
+                  <td className={`text-xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>Break Duration (minutes)</td>
+                  <td>
+                    <input
+                      type="number"
+                      placeholder="Break Duration"
+                      value={breakDuration}
+                      onChange={(e) => setBreakDuration(Number(e.target.value))}
+                      min="1"
+                      disabled={isRunning}
+                      className={`w-full px-6 py-3 text-lg rounded-lg border-2 ${isDarkMode
+                        ? "bg-gray-800 text-gray-300 border-gray-600"
+                        : "bg-white text-gray-900 border-gray-300"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Control Buttons */}
+            <div className="control-buttons flex justify-center space-x-8 mt-8">
+              <button
+                className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
+                  ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900"
+                  : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:from-blue-600 hover:to-blue-800"
+                  }`}
+                onClick={startTimer}
+                disabled={isRunning}
+              >
+                <FaPlay className="mr-2 text-xl" /> Start
+              </button>
+              <button
+                className={`flex items-center justify-center px-8 py-3 text-xl rounded-lg transition duration-300  ${isPaused ? `${isDarkMode
+                    ? "bg-gradient-to-r from-green-600 to-green-800 text-white hover:from-green-700 hover:to-green-900"
+                    : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:from-green-600 hover:to-green-800"
+                    }`
+                    : `${isDarkMode
+                      ? "bg-gradient-to-r from-red-600 to-red-800 text-white hover:from-red-700 hover:to-red-900"
+                      : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
+                    }`
+                  }`}
+                onClick={stopTimer}
+                disabled={!isRunning}
+              >
+                <FaStop className="mr-2 text-xl" /> {isPaused ? "Continue" : "Stop"}
+              </button>
+            </div>
+
+
+            {/* Reset Button */}
+            <div className="text-center mt-4">
+              <button
+                className={`px-8 py-3 text-xl rounded-lg transition duration-300 ${isDarkMode
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  : "bg-[#000000FF] text-white hover:bg-[#433534FF]"
+                  }`} onClick={resetTimer}
+              >
+                <FaRedo className="mr-2 inline text-lg" /> Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Task Information */}
+          <div
+            className={`task-info mt-12 text-center ${isDarkMode ? "text-emerald-800" : "text-slate-900"
+              }`}
+          >
+            <h2 className={`text-2xl font-semibold ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
+              {task || "No task selected"}
+            </h2>
+            <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
+              {Cur_Task?.start
+                ? `From ${new Date(Cur_Task.start).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "2-digit",
+                  day: "2-digit",
+                  year: "numeric",
+                })} ${new Date(Cur_Task.start).toLocaleTimeString("en-US", {
+                  hour12: false,
+                })}`
+                : ""}
+            </h3>
+
+            <h3 className={`text-lg mt-2 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
+              {Cur_Task?.end
+                ? `To ${new Date(Cur_Task.end).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "2-digit",
+                  day: "2-digit",
+                  year: "numeric",
+                })} ${new Date(Cur_Task.end).toLocaleTimeString("en-US", {
+                  hour12: false,
+                })}`
+                : ""}
+            </h3>
+
+            <h4 className={`text-xl font-semibold mt-4 ${isDarkMode ? "text-emerald-800" : "text-slate-900"}`}>
+              {isBreak ? "Break Time" : "Work Time"} -{" "}
+              {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+            </h4>
+
+            {isRunning && (
+              <div className="timer-bar mt-6">
+                <div
+                  className={`timer-progress rounded-full ${isDarkMode
+                    ? "bg-gradient-to-r from-green-500 to-blue-600"
+                    : "bg-gradient-to-r from-green-400 to-blue-500"
+                    }`}
+                  style={{
+                    width: `${((isBreak ? breakDuration : duration) * 60 - timeLeft) /
+                      ((isBreak ? breakDuration : duration) * 60) *
+                      100}%`,
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
 
   );
