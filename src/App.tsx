@@ -11,6 +11,7 @@ import TaskManagement from "./pages/TaskManagement/TaskManagement";
 import ProFilePage from './pages/Profile/ProfilePage';
 import AnalyticsPage from './pages/Analytics/Analytics';
 import HelpPage from './pages/Help/HelpPage';
+import ForgotPassword from './pages/ForgotPassword/ForgotPasswordPage';
 
 const protectedRoutes = [
   { path: "/home", component: <Dashboard /> },
@@ -32,6 +33,7 @@ function App() {
 
           {/* Public routes */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/google-login-success" element={<GoogleLoginSuccess />} />
 
           {/* Protected routes */}
