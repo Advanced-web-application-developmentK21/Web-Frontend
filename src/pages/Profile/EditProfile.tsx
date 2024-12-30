@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { UserInfo } from "../../types/type";
-import { title } from "process";
 import { useNavigate } from "react-router-dom";
-import { on } from "events";
 
 interface EditProfileProps {
   onClose: () => void;
@@ -21,7 +19,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const email = formData.userEmail;
   const [title, setTitle] = useState("profile");
-  const [accessToken, setToken] = useState(localStorage.getItem("token"));
+  const [accessToken] = useState(localStorage.getItem("token"));
   const [code, setCode] = useState(Array(9).fill("")); // Initialize with 9 empty fields
   const [message, setMessage] = useState("");
   const [step, setStep] = useState("profile"); // Step can be 'profile', 'code', or 'password'
@@ -57,7 +55,6 @@ const EditProfile: React.FC<EditProfileProps> = ({
           },
         }
       );
-      console.log("response:", response.data);
 
       onSave(response.data.data);
       Swal.fire({
@@ -203,7 +200,7 @@ const EditProfile: React.FC<EditProfileProps> = ({
           timer: 2000,
           showConfirmButton: false,
         });
-        navigate("/auth");
+        navigate("/profile");
       }
       //   setConfirmPassword("");
       //   setPassword("");

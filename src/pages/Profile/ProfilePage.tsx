@@ -3,21 +3,18 @@ import {
   FaEnvelope,
   FaUser,
   FaLock,
-  FaVenusMars,
   FaEdit,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { UserInfo } from "../../types/type";
 import axios from "axios";
 import EditProfile from "./EditProfile";
 
 const ProFilePage: React.FC = () => {
-  const [accessToken, setToken] = useState(localStorage.getItem("token"));
+  const [accessToken] = useState(localStorage.getItem("token"));
   const { isDarkMode } = useTheme();
   const userId = localStorage.getItem("userId");
   const [showAlert, setShowAlert] = useState<boolean>(false);
-  const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState<UserInfo>({
     userId: userId || "",
     userName: "",
@@ -37,7 +34,6 @@ const ProFilePage: React.FC = () => {
         return;
       }
       try {
-        console.log("token:", accessToken);
         const response = await axios.get(
           `http://localhost:4000/user/profile/${userId}`,
           {
@@ -46,19 +42,16 @@ const ProFilePage: React.FC = () => {
             },
           }
         );
-        console.log("response:", response.data.data);
         setUserDetails({
           userId: userId || "",
           userName: response.data.data.username,
           userEmail: response.data.data.email,
           userPassword: userDetails.userPassword,
         });
-        console.log("userId:", userDetails.userName);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
       }
     };
-    console.log("userId:", userDetails.userName);
     fetchUserData();
   }, []);
   useEffect(() => {
@@ -67,16 +60,10 @@ const ProFilePage: React.FC = () => {
     }
   }, [userId, accessToken]);
 
-  const handleAlertClose = () => {
-    setShowAlert(false);
-    setTimeout(() => {
-      navigate("/auth");
-    }, 300);
-  };
   const handleSave = async (updatedData: UserInfo) => {
     // Update the user details
     setUserDetails(updatedData);
-    console.log("Updated user data:", updatedData);
+    
     // Fetch the updated user data from the server
     const userId = localStorage.getItem("userId");
     if (!accessToken || !userId) {

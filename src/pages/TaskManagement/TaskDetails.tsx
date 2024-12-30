@@ -3,8 +3,6 @@ import { Task } from "../../types/type";
 import DatePicker from "react-datepicker";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Console } from "console";
-import { title } from "process";
 import { useTheme } from "../../context/ThemeContext";
 
 interface TaskDetailsProps {
@@ -43,25 +41,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     setErrors({ ...errors, [name]: "" }); // Clear errors on input
   };
 
-
-  function calculateEstimateTime(startDate: string | Date, dueDate: string | Date): string {
-    const start = new Date(startDate);
-    const due = new Date(dueDate);
-
-    // Calculate the difference in milliseconds
-    const diffMs = due.getTime() - start.getTime();
-
-    // Convert milliseconds to minutes and hours
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-    // Decide whether to show in minutes or hours
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minutes`;
-    } else {
-      return `${diffHours} hours`;
-    }
-  }
 
   const handleDateChange = (date: Date | null, field: string) => {
     // Ensure that startDate is a valid Date object
@@ -245,9 +224,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       dueDate: editedTask.dueDate
     };
 
-    console.log(curTask);
-    //console.log(task);
-
     try {
       const response = await axios.post(
         `http://localhost:4000/task/suggest`,
@@ -262,7 +238,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         }
       );
 
-      console.log('Frontend received data:', response.data.feedback);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
       setFeedback(parsedFeedback);
       setSuggestModal(true);

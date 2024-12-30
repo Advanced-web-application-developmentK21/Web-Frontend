@@ -1,13 +1,12 @@
 // NewTask.tsx
 import React, { useState } from "react";
-import { Task, TaskCategory } from "../../types/type";
+import { Task } from "../../types/type";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { start } from "repl";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useTheme } from "../../context/ThemeContext";
-import { title } from "process";
+
 interface NewTaskProps {
   Tasks?: Task[];
   onAddTask: (newTask: Task) => void;
@@ -112,8 +111,6 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
       dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : new Date().toISOString(),
     };
 
-    console.log(formattedData);
-
     try {
       const response = await axios.post(
         `http://localhost:4000/task/createTasks/${userId}`,
@@ -132,7 +129,6 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         // Reload the page after closing the success alert
         window.location.reload();
       });
-      console.log(response.data);
 
       setTaskData({
         id: "",
@@ -204,9 +200,6 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
       dueDate: taskData.dueDate ? taskData.dueDate.toISOString() : new Date().toISOString(),
     };
 
-    console.log(curTask);
-    //console.log(task);
-
     try {
       const response = await axios.post(
         `http://localhost:4000/task/suggest`,
@@ -221,7 +214,6 @@ const NewTask: React.FC<NewTaskProps> = ({ Tasks, onAddTask, onClose }) => {
         }
       );
 
-      console.log('Frontend received data:', response.data.feedback);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
       setFeedback(parsedFeedback);
       setSuggestModal(true);

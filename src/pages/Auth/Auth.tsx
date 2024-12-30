@@ -149,13 +149,8 @@ const Auth: React.FC = () => {
 
     if (!isSignUp) {
       handleSignIn();
-      console.log("Sign In data:", {
-        email: formData.email,
-        password: formData.password,
-      });
     } else {
       handleSignUp();
-      console.log("Sign Up data:", formData);
     }
   };
 

@@ -13,7 +13,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 function FocusTimer() {
   const { isDarkMode } = useTheme();
-    const [accessToken, setToken] = useState(localStorage.getItem('token'));
+    const [accessToken] = useState(localStorage.getItem('token'));
 
   const [Tasks, setTasks] = useState<Event[]>([]); // Array of tasks
   const [Cur_Task, setCur_Task] = useState<Event | null>(null);
@@ -70,7 +70,6 @@ function FocusTimer() {
         // Check if Set_task exists in the fetched tasks and set it as the default task
         if (Set_task) {
           const matchingTask = fetchedEvents.find((t) => t.title === Set_task.title);
-          console.log("Task already set!", matchingTask);
           if (matchingTask) {
             setTask(matchingTask.title);
             setCur_Task(Set_task);
@@ -157,7 +156,6 @@ function FocusTimer() {
         }).then((result) => {
           if (result.isConfirmed) {
             // Logic for marking the task as completed
-            console.log(`Task "${task}" marked as completed.`);
             UpdateTask("Completed");
             setTask("");
             setCur_Task(null);
@@ -323,7 +321,6 @@ function FocusTimer() {
                       value={task}
                       onChange={(e) => {
                         const selectedTask = Tasks.find((t) => t.title === e.target.value);
-                        console.log("Selected task's info: ", selectedTask);
 
                         if (selectedTask && selectedTask.status === "In Progress") {
                           setTask(e.target.value);

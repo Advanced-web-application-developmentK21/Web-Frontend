@@ -27,7 +27,7 @@ ChartJS.register(
 const AnalyticsPage = () => {
     const { isDarkMode } = useTheme();
     const userId = localStorage.getItem("userId");
-    const [accessToken, setToken] = useState(localStorage.getItem('token'));
+    const [accessToken] = useState(localStorage.getItem('token'));
 
     const [dashboardData, setDashboardData] = useState({
         totalTimeSpent: 0,
@@ -186,9 +186,6 @@ const AnalyticsPage = () => {
                 ],
             });
 
-            console.log('Updated Task Status Data:', taskStatusData); // Debugging line
-
-            // You can now use taskStatusData to render your chart (e.g., with Chart.js)
         } catch (error) {
             console.error('Error fetching task status data:', error);
         }
