@@ -108,6 +108,23 @@ const TaskList: React.FC = () => {
   const currentTasks = sortedTasks.slice(indexOfFirstTask, indexOfLastTask);
   const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
 
+  const getDisplayedPages = () => {
+    const maxPagesToShow = 3; // Number of pages to display at a time
+    let startPage = Math.max(currentPage - 1, 1);
+    let endPage = startPage + maxPagesToShow - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(endPage - maxPagesToShow + 1, 1);
+    }
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -145,6 +162,10 @@ const TaskList: React.FC = () => {
     setIsNewTaskModalOpen(false);
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, priorityFilter, statusFilter, sortBy]);
+  
   return (
     <div
       className={`p-6 relative min-h-screen ${isDarkMode ? "bg-white-100 text-black"
@@ -274,16 +295,16 @@ const TaskList: React.FC = () => {
               >
                 Previous
               </button>
-              {[...Array(totalPages)].map((_, index) => (
+              {getDisplayedPages().map((page) => (
                 <button
-                  key={index}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={`px-4 py-2 rounded-md ${currentPage === index + 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-300 text-gray-700"
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-md ${currentPage === page
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-300 text-gray-700"
                     } hover:bg-blue-500 transition`}
                 >
-                  {index + 1}
+                  {page}
                 </button>
               ))}
               <button
@@ -294,6 +315,7 @@ const TaskList: React.FC = () => {
                 Next
               </button>
             </div>
+
           </>
         )}
       </div>
