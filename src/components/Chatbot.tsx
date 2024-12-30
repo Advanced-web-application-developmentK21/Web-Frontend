@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { FaRegWindowClose } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
+import { UserInfo } from "../types/type";
 
 export default function Chatbot() {
   const { isDarkMode } = useTheme();
@@ -12,6 +13,14 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([{ sender: "bot", text: "Hello! May I help you?" }]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+
+  const [userDetails, setUserDetails] = useState<UserInfo>({
+    userId: userId || "",
+    userName: "",
+    userEmail: "",
+    userPassword: "",
+    avatar: "",
+  });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -85,6 +94,34 @@ export default function Chatbot() {
     }
   };
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!accessToken || !userId) {
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `http://localhost:4000/user/profile/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        setUserDetails({
+          userId: userId || "",
+          userName: response.data.data.username,
+          userEmail: response.data.data.email,
+          userPassword: userDetails.userPassword,
+          avatar: response.data.data.avatar || "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+    fetchUserData();
+  }, []); // Run only once on component mount
 
   return (
     <div className="fixed bottom-4 right-8 z-50">
@@ -166,7 +203,7 @@ export default function Chatbot() {
                     </div>
                     {msg.sender === 'user' && (
                       <img
-                        src="/user.png"
+                        src={userDetails.avatar || "/user.png"}
                         alt="User"
                         className="w-10 h-10 rounded-full ml-3"
                       />

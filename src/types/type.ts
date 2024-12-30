@@ -30,4 +30,5 @@ export interface UserInfo {
   userName: string;
   userEmail: string;
   userPassword: string;
+  avatar: string;
 }

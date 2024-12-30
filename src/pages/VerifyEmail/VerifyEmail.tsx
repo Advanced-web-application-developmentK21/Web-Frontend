@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const VerifyEmail = () => {
   const [code, setCode] = useState(Array(9).fill('')); // Initialize with 9 empty fields
@@ -13,6 +13,8 @@ const VerifyEmail = () => {
   const location = useLocation();
   const formData = location.state;
   const [email, setEmail] = useState(formData.email);
+
+  const navigate = useNavigate();
 
   // Send verify code to your email
   useEffect(() => {
@@ -63,10 +65,6 @@ const VerifyEmail = () => {
         (nextInput as HTMLInputElement).focus();
       }
     }
-  };
-
-  const handleClearCode = () => {
-    setCode(Array(9).fill(''));
   };
 
   const handleSignUp = async () => {
