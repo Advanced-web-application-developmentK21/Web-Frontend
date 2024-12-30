@@ -92,6 +92,7 @@ const VerifyEmail = () => {
               timer: 2000,
               showConfirmButton: false,
             });
+            navigate("/auth");
           }
         } catch (error: any) {
           let errorMessage = "An unknown error occurred.";
@@ -126,7 +127,7 @@ const VerifyEmail = () => {
           <strong>{formData.email}</strong>. Please enter the code below to confirm your email address.
         </h2>
 
-        <div className="mb-2">
+        <div className="mb-2 text-center">
           {code.map((digit, index) => (
             <input
               key={index}
