@@ -6,6 +6,8 @@ import { useTheme } from "../context/ThemeContext";
 export default function Chatbot() {
   const { isDarkMode } = useTheme();
   const userId = localStorage.getItem("userId");
+  const [accessToken] = useState(localStorage.getItem('token'));
+
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([{ sender: "bot", text: "Hello! May I help you?" }]);
   const [inputValue, setInputValue] = useState("");
@@ -83,6 +85,7 @@ export default function Chatbot() {
     }
   };
 
+
   return (
     <div className="fixed bottom-4 right-8 z-50">
       <button
@@ -116,91 +119,109 @@ export default function Chatbot() {
               </button>
             </div>
           </div>
-
-          <div
-            className={`flex-1 p-4 overflow-y-auto space-y-4 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
-          >
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.sender === 'bot' ? 'justify-start' : 'justify-end'}`}
-              >
-                {msg.sender === 'bot' && (
-                  <img
-                    src="/bot.avif"
-                    alt="Bot"
-                    className="w-10 h-10 rounded-full mr-3"
-                  />
-                )}
-                <div
-                  className={`max-w-[70%] px-4 py-2 rounded-xl shadow ${msg.sender === 'bot'
-                    ? isDarkMode
-                      ? 'bg-gray-700 text-white'
-                      : 'bg-gray-200 text-black'
-                    : isDarkMode
-                      ? 'bg-blue-700 text-white'
-                      : 'bg-blue-500 text-white'
-                    }`}
-                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} // Cho phép xuống dòng trong tin nhắn
+          {!accessToken ? (
+            <div className={`flex flex-col items-center justify-center h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-b from-blue-100 to-blue-300'} p-6`}>
+              <div className={`text-center p-4 rounded-lg shadow-md transform transition-all duration-300 hover:scale-105 max-w-xs w-full ${isDarkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-200'}`}>
+                <p className={`text-lg font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'} mb-3`}>
+                  You must log in to access to chat with AI.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/auth'}
+                  className={`w-full py-2 rounded-md text-base font-medium shadow-sm transition-transform duration-300 hover:scale-105 ${isDarkMode ? 'bg-blue-700 text-white hover:bg-blue-800' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
                 >
-                  {msg.text}
-                </div>
-                {msg.sender === 'user' && (
-                  <img
-                    src="/user.png"
-                    alt="User"
-                    className="w-10 h-10 rounded-full ml-3"
-                  />
-                )}
+                  Log In
+                </button>
               </div>
-            ))}
-
-            {isTyping && (
-              <div className="flex justify-start items-center space-x-2">
-                <img
-                  src="/bot.avif"
-                  alt="Bot"
-                  className="w-10 h-10 rounded-full mr-3"
-                />
-                <div
-                  className={`px-4 py-2 rounded-xl shadow flex items-center space-x-1 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'}`}
-                >
-                  <span
-                    className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0s', animationDuration: '0.6s' }}
-                  ></span>
-                  <span
-                    className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.2s', animationDuration: '0.6s' }}
-                  ></span>
-                  <span
-                    className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.4s', animationDuration: '0.6s' }}
-                  ></span>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="p-4 border-t border-gray-300 bg-white">
-            <div className="flex items-center space-x-2">
-              <textarea
-                className={`flex-1 p-3 border ${isDarkMode ? 'bg-gray-900 text-white border-gray-600' : 'bg-white text-black border-gray-300'} rounded-xl focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-gray-500' : 'focus:ring-blue-500'}`}
-                placeholder="Enter your message..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown} // Đảm bảo đúng loại sự kiện
-              />
-              <button
-                onClick={handleSendMessage}
-                className={`px-4 py-2 rounded-xl hover:scale-105 transition-transform duration-300 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gradient-to-br from-blue-500 to-purple-500 text-white'}`}
-              >
-                Send
-              </button>
             </div>
-          </div>
+
+          ) : (
+            <>
+              <div
+                className={`flex-1 p-4 overflow-y-auto space-y-4 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
+              >
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${msg.sender === 'bot' ? 'justify-start' : 'justify-end'}`}
+                  >
+                    {msg.sender === 'bot' && (
+                      <img
+                        src="/bot.avif"
+                        alt="Bot"
+                        className="w-10 h-10 rounded-full mr-3"
+                      />
+                    )}
+                    <div
+                      className={`max-w-[70%] px-4 py-2 rounded-xl shadow ${msg.sender === 'bot'
+                        ? isDarkMode
+                          ? 'bg-gray-700 text-white'
+                          : 'bg-gray-200 text-black'
+                        : isDarkMode
+                          ? 'bg-blue-700 text-white'
+                          : 'bg-blue-500 text-white'
+                        }`}
+                      style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} // Cho phép xuống dòng trong tin nhắn
+                    >
+                      {msg.text}
+                    </div>
+                    {msg.sender === 'user' && (
+                      <img
+                        src="/user.png"
+                        alt="User"
+                        className="w-10 h-10 rounded-full ml-3"
+                      />
+                    )}
+                  </div>
+                ))}
+
+                {isTyping && (
+                  <div className="flex justify-start items-center space-x-2">
+                    <img
+                      src="/bot.avif"
+                      alt="Bot"
+                      className="w-10 h-10 rounded-full mr-3"
+                    />
+                    <div
+                      className={`px-4 py-2 rounded-xl shadow flex items-center space-x-1 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black'}`}
+                    >
+                      <span
+                        className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
+                        style={{ animationDelay: '0s', animationDuration: '0.6s' }}
+                      ></span>
+                      <span
+                        className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
+                        style={{ animationDelay: '0.2s', animationDuration: '0.6s' }}
+                      ></span>
+                      <span
+                        className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"
+                        style={{ animationDelay: '0.4s', animationDuration: '0.6s' }}
+                      ></span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="p-4 border-t border-gray-300 bg-white">
+                <div className="flex items-center space-x-2">
+                  <textarea
+                    className={`flex-1 p-3 border ${isDarkMode ? 'bg-gray-900 text-white border-gray-600' : 'bg-white text-black border-gray-300'} rounded-xl focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-gray-500' : 'focus:ring-blue-500'}`}
+                    placeholder="Enter your message..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown} // Đảm bảo đúng loại sự kiện
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    className={`px-4 py-2 rounded-xl hover:scale-105 transition-transform duration-300 ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gradient-to-br from-blue-500 to-purple-500 text-white'}`}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

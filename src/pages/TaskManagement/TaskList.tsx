@@ -9,7 +9,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useLocation } from "react-router-dom";
 
 const TaskList: React.FC = () => {
-  const [accessToken, setToken] = useState(localStorage.getItem('token'));
+  const [accessToken] = useState(localStorage.getItem('token'));
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [search, setSearch] = useState("");

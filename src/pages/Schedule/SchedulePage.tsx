@@ -29,7 +29,7 @@ const allViews = Object.keys(Views)
 
 
 export default function Schedule() {
-  const [accessToken, setToken] = useState(localStorage.getItem('token'));
+  const [accessToken] = useState(localStorage.getItem('token'));
 
   const [showModal, setShowModal] = useState(false);
   const [modalEvent, setModalEvent] = useState<Event | null>(null);
@@ -249,9 +249,7 @@ export default function Schedule() {
   };
 
   const handleEditEvent = (event: Event) => {
-    // Logic to edit event (e.g., open a form with pre-filled values)
-    console.log("Editing event:", event);
-
+    
     navigate("/tasks", { state: { schedule: event } });
   };
 
@@ -261,8 +259,6 @@ export default function Schedule() {
 
   const navigate = useNavigate();
   const handleFocusTime = (event: Event) => {
-    // Logic to edit event (e.g., open a form with pre-filled values)
-    console.log("Focus Time event:", event);
 
     if (event.status === "In Progress") {
       navigate("/timer", { state: { schedule: event } });
@@ -336,9 +332,6 @@ export default function Schedule() {
         }
       );
 
-      console.log(calendarEvents)
-
-      console.log('Frontend received data:', response.data);
       const parsedFeedback = parseFeedback(response.data.feedback); // Parse the feedback into structured data
       setFeedback(parsedFeedback);
       setFeedbackModal(true);
