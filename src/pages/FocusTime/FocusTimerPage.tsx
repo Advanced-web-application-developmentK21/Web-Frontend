@@ -172,6 +172,27 @@ function FocusTimer() {
     return () => clearInterval(timer);
   }, [isRunning, isPaused, timeLeft, isBreak, duration, breakDuration]);
 
+  useEffect(() => {
+    const updateExpiredTasks = async () => {
+      try {
+        await axios.put(
+          `http://localhost:4000/task/update-expired-tasks/${userId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("Expired tasks updated successfully");
+      } catch (taskError: any) {
+        console.error("Error updating expired tasks:", taskError.response?.data || taskError.message);
+      }
+    };
+
+    updateExpiredTasks();
+  }, [userId, accessToken]);
+
   const startTimer = () => {
     const finalTask = task; // Use newTask if provided, else selected task
     if (!finalTask) {
