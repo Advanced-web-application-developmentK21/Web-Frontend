@@ -72,6 +72,22 @@ const Auth: React.FC = () => {
         // Update login with all data
         login(user_id, user_name, access_token);
 
+        // Call API to update expired tasks
+        try {
+          await axios.put(
+            `http://localhost:4000/task/update-expired-tasks/${user_id}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${access_token}`,
+              },
+            }
+          );
+          console.log("Expired tasks updated successfully");
+        } catch (taskError: any) {
+          console.error("Error updating expired tasks:", taskError.response?.data || taskError.message);
+        }
+
         Swal.fire({
           icon: 'success',
           title: 'Login Successful!',

@@ -139,6 +139,27 @@ export default function Schedule() {
     fetchEvents();
   }, [userId]);
 
+  useEffect(() => {
+    const updateExpiredTasks = async () => {
+      try {
+        await axios.put(
+          `http://localhost:4000/task/update-expired-tasks/${userId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("Expired tasks updated successfully");
+      } catch (taskError: any) {
+        console.error("Error updating expired tasks:", taskError.response?.data || taskError.message);
+      }
+    };
+
+    updateExpiredTasks();
+  }, [userId, accessToken]);
+
   const handleShowMore = (events: Event[]) => {
     setShowMoreEvents(events); // Store the events to show in the "Show More" modal
     setShowMoreModal(true);    // Show the "Show More" modal

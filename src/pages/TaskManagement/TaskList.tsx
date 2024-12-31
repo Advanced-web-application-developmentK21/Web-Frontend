@@ -9,6 +9,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useLocation } from "react-router-dom";
 
 const TaskList: React.FC = () => {
+  const userId = localStorage.getItem("userId");
   const [accessToken] = useState(localStorage.getItem('token'));
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -23,7 +24,6 @@ const TaskList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { isDarkMode } = useTheme();
 
-  const userId = localStorage.getItem("userId");
   const location = useLocation();
   const Set_task = location.state?.schedule;
 
@@ -79,6 +79,27 @@ const TaskList: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [search, priorityFilter, statusFilter, sortBy, userId]);
+
+  useEffect(() => {
+    const updateExpiredTasks = async () => {
+      try {
+        await axios.put(
+          `http://localhost:4000/task/update-expired-tasks/${userId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("Expired tasks updated successfully");
+      } catch (taskError: any) {
+        console.error("Error updating expired tasks:", taskError.response?.data || taskError.message);
+      }
+    };
+
+    updateExpiredTasks();
+  }, [userId, accessToken]);
 
   // Filters tasks by priority and status
   const filteredTasks = tasks.filter((task) => {
