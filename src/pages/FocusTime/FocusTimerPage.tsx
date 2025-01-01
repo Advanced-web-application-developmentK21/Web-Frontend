@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Event } from "../../types/events";
 import { FaPlay, FaRedo, FaStop } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
+import Loading from "../../components/loading";
 
 
 
@@ -27,6 +28,60 @@ function FocusTimer() {
   const [isPaused, setIsPaused] = useState(false);  // If the timer is paused
   const [isBreak, setIsBreak] = useState<boolean>(false); // Toggle work/break
 
+  //Handle AI suggest task
+  const [error, setError] = useState<String>("");
+  const [loading, setLoading] = useState(true);
+  const [feedback, setfeedback] = useState(String);
+  const [Feedback, setFeedback] = useState<{
+    keyIssues: { task: string; time: string }[];
+  } | null>(null);
+  
+  const parseFeedback = (rawText: string) => {
+    // Regex to match tasks with time in minutes or hours
+    const taskRegex = /-\s\*\*(.+?):\*\*\s([\d]+)\s(hour|hours|minute|minutes)\s\((.+?)\)/g;
+    const parsedTasks: { task: string; time: string }[] = [];
+    let match;
+  
+    while ((match = taskRegex.exec(rawText)) !== null) {
+      const [, task, time, unit, priority] = match; // Extract task, time, unit (hours/minutes), and priority
+      console.log("Task:", task);
+      console.log("Time:", time, unit);
+      console.log("Priority:", priority);
+  
+      parsedTasks.push({
+        task, // Task name
+        time: `${time} ${unit} (${priority})`, // Format time with unit and priority
+      });
+    }
+  
+    return parsedTasks;
+  };
+
+  const fetchSuggestAI = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get the Bearer token
+      const response = await axios.post(
+        `http://localhost:4000/task/suggest-focus-time/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the Authorization header
+          },
+        }
+      );
+      const parsedFeedback = parseFeedback(response.data.suggestion); // Parse the feedback into structured data
+      console.log(response.data.suggestion);
+      setFeedback({
+        keyIssues: parsedFeedback,
+      });
+    } catch (err) {
+      console.error("Error fetching AI feedback:", err);
+      setError("Unable to fetch AI feedback. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const { setIsTimerRunning } = useAuth();
 
   const userId = localStorage.getItem("userId");
@@ -44,15 +99,17 @@ function FocusTimer() {
             },
           }
         );
-        const fetchedEvents: Event[] = response.data.data.map((task: any) => {
+        const fetchedEvents: Event[] = response.data.data
+        .filter((task: any) => task.status === "In Progress")
+        .map((task: any) => {
           const startDate = moment.utc(task.startDate).local().toDate();
           const endDate = moment.utc(task.dueDate).local().toDate();
-
+  
           if (task.allDay) {
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 999);
           }
-
+  
           return {
             id: task._id,
             title: task.name,
@@ -81,6 +138,7 @@ function FocusTimer() {
     };
 
     fetchEvents();
+    fetchSuggestAI();
   }, [userId, Set_task]);
 
   useEffect(() => {
@@ -332,6 +390,40 @@ function FocusTimer() {
         <>
 
           <div className="task-controls space-y-8">
+            {/* AI Suggest Section */}
+            <div
+              className={`${
+                isDarkMode ? 'bg-gray-800 text-gray-100' 
+                : 'bg-white'
+              } shadow-lg rounded-lg p-8 hover:shadow-xl transition-shadow`}
+            >
+              {/* Loading State */}
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loading />
+                </div>
+              ) : (
+                <div>
+                  <h3 className={`${
+                    isDarkMode ? 'text-white' 
+                    : 'text-grey-800'
+                    }`} 
+                  >
+                    Tasks suggested by AI
+                  </h3>
+                  {Feedback?.keyIssues.map((issue, index) => (
+                    <div key={index}>
+                      <p>
+                        <strong>{issue.task}</strong>: {issue.time}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              
+            </div>
+
             <table className="w-full">
               <tbody>
                 {/* Select Task Row */}
